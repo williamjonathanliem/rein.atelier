@@ -1,0 +1,325 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  MoreHorizontal,
+  FileText,
+  MessageCircle,
+  Edit,
+  Trash2,
+  LayoutGrid,
+} from 'lucide-react'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { StatusBadge } from './StatusBadge'
+import { PriorityBadge } from './PriorityBadge'
+import { PaymentBadge } from './PaymentBadge'
+import { AddOrderModal } from './AddOrderModal'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { useOrdersContext } from '@/contexts/OrdersContext'
+import {
+  formatIDR, formatDate, isOverdue, isDueSoon, cn,
+} from '@/lib/utils'
+import type { Order, OrderStatus, PaymentStatus } from '@/types'
+
+const PAGE_SIZE = 20
+
+export function OrdersTable() {
+  const router = useRouter()
+  const { orders, loading, deleteOrder, updateStatus, updatePaymentStatus } = useOrdersContext()
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [priorityFilter, setPriorityFilter] = useState('all')
+  const [paymentFilter, setPaymentFilter] = useState('all')
+  const [page, setPage] = useState(1)
+  const [addOpen, setAddOpen] = useState(false)
+  const [editOrder, setEditOrder] = useState<Order | null>(null)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+
+  const filtered = orders.filter(o => {
+    const q = search.toLowerCase()
+    const matchSearch = !q ||
+      o.client_name.toLowerCase().includes(q) ||
+      o.order_number.toLowerCase().includes(q) ||
+      (o.description ?? '').toLowerCase().includes(q)
+    const matchStatus = statusFilter === 'all' || o.status === statusFilter
+    const matchPriority = priorityFilter === 'all' || o.priority === priorityFilter
+    const matchPayment = paymentFilter === 'all' || o.payment_status === paymentFilter
+    return matchSearch && matchStatus && matchPriority && matchPayment
+  })
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  const handleStatusChange = async (id: string, status: OrderStatus) => {
+    await updateStatus(id, status)
+  }
+
+  const handlePaymentChange = async (id: string, status: PaymentStatus) => {
+    await updatePaymentStatus(id, status)
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-2 border-violet-200 border-t-violet-500 rounded-full animate-spin" /></div>
+  }
+
+  return (
+    <div>
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <Input
+          placeholder="Cari pesanan..."
+          value={search}
+          onChange={e => { setSearch(e.target.value); setPage(1) }}
+          className="max-w-xs"
+        />
+        <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setPage(1) }}>
+          <SelectTrigger className="w-36"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Status</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="revision">Revision</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={priorityFilter} onValueChange={v => { setPriorityFilter(v); setPage(1) }}>
+          <SelectTrigger className="w-36"><SelectValue placeholder="Prioritas" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Prioritas</SelectItem>
+            <SelectItem value="low">Low</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="high">High</SelectItem>
+            <SelectItem value="urgent">Urgent</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={paymentFilter} onValueChange={v => { setPaymentFilter(v); setPage(1) }}>
+          <SelectTrigger className="w-36"><SelectValue placeholder="Pembayaran" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Pembayaran</SelectItem>
+            <SelectItem value="unpaid">Unpaid</SelectItem>
+            <SelectItem value="partial">Partial</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="flex-1" />
+        <Link href="/kanban">
+          <Button variant="outline" size="sm">
+            <LayoutGrid className="h-3.5 w-3.5" />
+            Kanban
+          </Button>
+        </Link>
+        <Button onClick={() => { setEditOrder(null); setAddOpen(true) }}>
+          + Tambah Pesanan
+        </Button>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[900px]">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">#</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Klien</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Deskripsi</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Harga</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">DP</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Deadline</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Prioritas</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Bayar</th>
+                <th className="px-4 py-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {paginated.length === 0 ? (
+                <tr>
+                  <td colSpan={10}>
+                    <EmptyState
+                      title={search || statusFilter !== 'all' || priorityFilter !== 'all' || paymentFilter !== 'all'
+                        ? 'Tidak ada pesanan yang cocok dengan filter.'
+                        : 'Belum ada pesanan. Yuk tambah pesanan pertama! 🌸'}
+                      action={orders.length === 0 ? (
+                        <Button onClick={() => { setEditOrder(null); setAddOpen(true) }}>+ Tambah Pesanan</Button>
+                      ) : undefined}
+                    />
+                  </td>
+                </tr>
+              ) : (
+                paginated.map(order => {
+                  const overdue = isOverdue(order.deadline)
+                  const soon = !overdue && isDueSoon(order.deadline)
+                  const rowBg = overdue ? 'bg-red-50' : soon ? 'bg-amber-50' : ''
+
+                  return (
+                    <tr key={order.id} className={cn('border-b border-gray-50 hover:bg-gray-50/70 transition-colors', rowBg)}>
+                      <td className="px-4 py-3 font-mono text-xs text-gray-400">{order.order_number}</td>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-gray-900">{order.client_name}</p>
+                        {order.client_phone && <p className="text-xs text-gray-400">{order.client_phone}</p>}
+                      </td>
+                      <td className="px-4 py-3 max-w-[180px]">
+                        <p className="text-gray-700 line-clamp-2 text-xs">{order.description || '—'}</p>
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium text-gray-900">{formatIDR(order.price)}</td>
+                      <td className="px-4 py-3 text-right text-xs">
+                        {order.deposit_paid
+                          ? <span className="text-emerald-600">✓ {formatIDR(order.deposit_amount)}</span>
+                          : <span className="text-gray-400">—</span>}
+                      </td>
+                      <td className={cn('px-4 py-3 text-sm', overdue ? 'text-red-600 font-medium' : soon ? 'text-amber-600 font-medium' : 'text-gray-600')}>
+                        {formatDate(order.deadline)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <PriorityBadge priority={order.priority} />
+                      </td>
+                      {/* Inline status edit */}
+                      <td className="px-4 py-3">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="cursor-pointer hover:opacity-80 transition-opacity">
+                              <StatusBadge status={order.status} />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-44 p-1">
+                            {(['pending', 'in_progress', 'revision', 'completed', 'cancelled'] as OrderStatus[]).map(s => (
+                              <button
+                                key={s}
+                                className="w-full text-left px-2 py-1.5 rounded-lg text-sm hover:bg-violet-50 flex items-center gap-2"
+                                onClick={() => handleStatusChange(order.id, s)}
+                              >
+                                <StatusBadge status={s} />
+                              </button>
+                            ))}
+                          </PopoverContent>
+                        </Popover>
+                      </td>
+                      {/* Inline payment edit */}
+                      <td className="px-4 py-3">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="cursor-pointer hover:opacity-80 transition-opacity">
+                              <PaymentBadge status={order.payment_status} />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-36 p-1">
+                            {(['unpaid', 'partial', 'paid'] as PaymentStatus[]).map(s => (
+                              <button
+                                key={s}
+                                className="w-full text-left px-2 py-1.5 rounded-lg text-sm hover:bg-violet-50 flex items-center gap-2"
+                                onClick={() => handlePaymentChange(order.id, s)}
+                              >
+                                <PaymentBadge status={s} />
+                              </button>
+                            ))}
+                          </PopoverContent>
+                        </Popover>
+                      </td>
+                      <td className="px-4 py-3">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setEditOrder(order); setAddOpen(true) }}>
+                              <Edit className="h-3.5 w-3.5" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/invoice/${order.id}`)}>
+                              <FileText className="h-3.5 w-3.5" /> Generate Invoice
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/invoice/${order.id}?tab=whatsapp`)}>
+                              <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-red-600 focus:text-red-600"
+                              onClick={() => setDeleteId(order.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" /> Hapus
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50">
+            <p className="text-xs text-gray-500">
+              {filtered.length} pesanan · Halaman {page} dari {totalPages}
+            </p>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                ← Prev
+              </Button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const p = i + 1
+                return (
+                  <Button
+                    key={p}
+                    variant={page === p ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setPage(p)}
+                    className="w-8 px-0"
+                  >
+                    {p}
+                  </Button>
+                )
+              })}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+              >
+                Next →
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <AddOrderModal
+        open={addOpen}
+        onOpenChange={open => { setAddOpen(open); if (!open) setEditOrder(null) }}
+        editOrder={editOrder}
+      />
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={open => { if (!open) setDeleteId(null) }}
+        title="Hapus Pesanan"
+        description="Yakin ingin menghapus pesanan ini? Tindakan ini tidak bisa dibatalkan."
+        confirmLabel="Hapus"
+        onConfirm={() => { if (deleteId) deleteOrder(deleteId) }}
+        destructive
+      />
+    </div>
+  )
+}

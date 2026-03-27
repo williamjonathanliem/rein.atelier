@@ -1,0 +1,310 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+} from '@/components/ui/command'
+import { Check, ChevronsUpDown } from 'lucide-react'
+import { cn, todayString } from '@/lib/utils'
+import { useOrdersContext } from '@/contexts/OrdersContext'
+import { useClientsContext } from '@/contexts/ClientsContext'
+import type { Order } from '@/types'
+
+interface AddOrderModalProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  editOrder?: Order | null
+}
+
+const defaultForm = {
+  client_id: '',
+  client_name: '',
+  client_phone: '',
+  client_email: '',
+  client_address: '',
+  description: '',
+  notes: '',
+  price: '',
+  deposit_paid: false,
+  deposit_amount: '',
+  order_date: todayString(),
+  deadline: '',
+  due_date: '',
+  status: 'pending' as Order['status'],
+  priority: 'medium' as Order['priority'],
+  payment_status: 'unpaid' as Order['payment_status'],
+  invoice_template: 'classic' as Order['invoice_template'],
+  invoice_color: '#a78bfa',
+  invoice_font: 'Instrument Sans',
+  invoice_date_format: 'MMM D, YYYY',
+  whatsapp_sent: false,
+}
+
+export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalProps) {
+  const { addOrder, updateOrder } = useOrdersContext()
+  const { clients } = useClientsContext()
+  const [form, setForm] = useState(defaultForm)
+  const [saving, setSaving] = useState(false)
+  const [clientSearchOpen, setClientSearchOpen] = useState(false)
+
+  useEffect(() => {
+    if (editOrder) {
+      setForm({
+        client_id: editOrder.client_id ?? '',
+        client_name: editOrder.client_name,
+        client_phone: editOrder.client_phone ?? '',
+        client_email: editOrder.client_email ?? '',
+        client_address: editOrder.client_address ?? '',
+        description: editOrder.description ?? '',
+        notes: editOrder.notes ?? '',
+        price: String(editOrder.price),
+        deposit_paid: editOrder.deposit_paid,
+        deposit_amount: String(editOrder.deposit_amount),
+        order_date: editOrder.order_date,
+        deadline: editOrder.deadline,
+        due_date: editOrder.due_date ?? '',
+        status: editOrder.status,
+        priority: editOrder.priority,
+        payment_status: editOrder.payment_status,
+        invoice_template: editOrder.invoice_template,
+        invoice_color: editOrder.invoice_color,
+        invoice_font: editOrder.invoice_font,
+        invoice_date_format: editOrder.invoice_date_format,
+        whatsapp_sent: editOrder.whatsapp_sent,
+      })
+    } else {
+      setForm({ ...defaultForm, order_date: todayString() })
+    }
+  }, [editOrder, open])
+
+  const set = <K extends keyof typeof defaultForm>(k: K, v: (typeof defaultForm)[K]) =>
+    setForm(prev => ({ ...prev, [k]: v }))
+
+  const selectClient = (clientId: string) => {
+    const c = clients.find(c => c.id === clientId)
+    if (c) {
+      setForm(prev => ({
+        ...prev,
+        client_id: c.id,
+        client_name: c.name,
+        client_phone: c.phone ?? '',
+        client_email: c.email ?? '',
+        client_address: '',
+      }))
+    }
+    setClientSearchOpen(false)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form.client_name.trim() || !form.deadline) return
+    setSaving(true)
+
+    const payload = {
+      client_id: form.client_id || undefined,
+      client_name: form.client_name,
+      client_phone: form.client_phone,
+      client_email: form.client_email,
+      client_address: form.client_address,
+      description: form.description,
+      notes: form.notes,
+      price: parseFloat(form.price) || 0,
+      deposit_paid: form.deposit_paid,
+      deposit_amount: parseFloat(form.deposit_amount) || 0,
+      order_date: form.order_date,
+      deadline: form.deadline,
+      due_date: form.due_date || undefined,
+      status: form.status,
+      priority: form.priority,
+      payment_status: form.payment_status,
+      invoice_template: form.invoice_template,
+      invoice_color: form.invoice_color,
+      invoice_font: form.invoice_font,
+      invoice_date_format: form.invoice_date_format,
+      whatsapp_sent: form.whatsapp_sent,
+    }
+
+    if (editOrder) {
+      await updateOrder(editOrder.id, payload)
+    } else {
+      await addOrder(payload)
+    }
+    setSaving(false)
+    onOpenChange(false)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{editOrder ? 'Edit Pesanan' : 'Tambah Pesanan'}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-2 gap-6">
+            {/* Left column — Client & Details */}
+            <div className="flex flex-col gap-4">
+              <div>
+                <Label className="mb-1.5 block">Pilih Klien yang Ada</Label>
+                <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button type="button" variant="outline" className="w-full justify-between">
+                      {form.client_id
+                        ? clients.find(c => c.id === form.client_id)?.name ?? form.client_name
+                        : 'Cari klien...'}
+                      <ChevronsUpDown className="h-4 w-4 opacity-40" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[300px] p-0">
+                    <Command>
+                      <CommandInput placeholder="Cari klien..." />
+                      <CommandList>
+                        <CommandEmpty>Klien tidak ditemukan.</CommandEmpty>
+                        <CommandGroup>
+                          {clients.map(c => (
+                            <CommandItem key={c.id} value={c.name} onSelect={() => selectClient(c.id)}>
+                              <Check className={cn('mr-2 h-4 w-4', form.client_id === c.id ? 'opacity-100' : 'opacity-0')} />
+                              <div>
+                                <p className="font-medium">{c.name}</p>
+                                {c.phone && <p className="text-xs text-gray-400">{c.phone}</p>}
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div>
+                <Label className="mb-1.5 block">Nama Klien *</Label>
+                <Input value={form.client_name} onChange={e => set('client_name', e.target.value)} required placeholder="Nama klien" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="mb-1.5 block">Nomor HP</Label>
+                  <Input value={form.client_phone} onChange={e => set('client_phone', e.target.value)} placeholder="08123456789" />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block">Email</Label>
+                  <Input type="email" value={form.client_email} onChange={e => set('client_email', e.target.value)} placeholder="email@contoh.com" />
+                </div>
+              </div>
+              <div>
+                <Label className="mb-1.5 block">Alamat</Label>
+                <Textarea value={form.client_address} onChange={e => set('client_address', e.target.value)} placeholder="Alamat pengiriman (opsional)" rows={2} />
+              </div>
+              <div>
+                <Label className="mb-1.5 block">Deskripsi Pesanan *</Label>
+                <Textarea
+                  value={form.description}
+                  onChange={e => set('description', e.target.value)}
+                  placeholder="Contoh: Buket bunga pipe cleaner 10 tangkai, warna pink dan putih, dengan pita satin"
+                  rows={3}
+                  required
+                />
+              </div>
+              <div>
+                <Label className="mb-1.5 block">Catatan Internal</Label>
+                <Textarea value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Catatan internal tentang pesanan ini..." rows={2} />
+              </div>
+            </div>
+
+            {/* Right column — Order Config */}
+            <div className="flex flex-col gap-4">
+              <div>
+                <Label className="mb-1.5 block">Harga *</Label>
+                <Input type="number" value={form.price} onChange={e => set('price', e.target.value)} placeholder="0" min="0" required />
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="deposit-paid"
+                  checked={form.deposit_paid}
+                  onCheckedChange={v => set('deposit_paid', v)}
+                />
+                <Label htmlFor="deposit-paid" className="cursor-pointer normal-case text-sm font-medium text-gray-700">DP Sudah Dibayar</Label>
+              </div>
+              {form.deposit_paid && (
+                <div>
+                  <Label className="mb-1.5 block">Jumlah DP</Label>
+                  <Input type="number" value={form.deposit_amount} onChange={e => set('deposit_amount', e.target.value)} placeholder="0" min="0" />
+                </div>
+              )}
+              <div>
+                <Label className="mb-1.5 block">Tanggal Order</Label>
+                <Input type="date" value={form.order_date} onChange={e => set('order_date', e.target.value)} />
+              </div>
+              <div>
+                <Label className="mb-1.5 block">Deadline *</Label>
+                <Input type="date" value={form.deadline} onChange={e => set('deadline', e.target.value)} required />
+              </div>
+              <div>
+                <Label className="mb-1.5 block">Tanggal Jatuh Tempo (opsional)</Label>
+                <Input type="date" value={form.due_date} onChange={e => set('due_date', e.target.value)} />
+              </div>
+              <div>
+                <Label className="mb-1.5 block">Status</Label>
+                <Select value={form.status} onValueChange={v => set('status', v as Order['status'])}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="revision">Revision</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="mb-1.5 block">Prioritas</Label>
+                <Select value={form.priority} onValueChange={v => set('priority', v as Order['priority'])}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="mb-1.5 block">Status Pembayaran</Label>
+                <Select value={form.payment_status} onValueChange={v => set('payment_status', v as Order['payment_status'])}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unpaid">Unpaid</SelectItem>
+                    <SelectItem value="partial">Partial</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-6">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Batal</Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Menyimpan...' : editOrder ? 'Simpan Perubahan' : 'Tambah Pesanan'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
