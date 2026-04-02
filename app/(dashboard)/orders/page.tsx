@@ -6,7 +6,7 @@ import { OrdersTable } from '@/components/orders/OrdersTable'
 export default function OrdersPage() {
   return (
     <div>
-      <TopBar title="Pesanan" />
+      <TopBar title="Orders" />
       <div className="p-8">
         <OrdersTable />
       </div>

@@ -6,7 +6,7 @@ import { ClientsTable } from '@/components/clients/ClientsTable'
 export default function ClientsPage() {
   return (
     <div>
-      <TopBar title="Klien" />
+      <TopBar title="Client" />
       <div className="p-8">
         <ClientsTable />
       </div>

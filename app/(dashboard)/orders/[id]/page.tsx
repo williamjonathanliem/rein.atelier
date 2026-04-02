@@ -21,7 +21,7 @@ export default function OrderDetailPage() {
   if (loading) {
     return (
       <div>
-        <TopBar title="Detail Pesanan" />
+        <TopBar title="Order Details" />
         <div className="p-8 flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-violet-200 border-t-violet-500 rounded-full animate-spin" />
         </div>
@@ -32,10 +32,10 @@ export default function OrderDetailPage() {
   if (!order) {
     return (
       <div>
-        <TopBar title="Detail Pesanan" />
+        <TopBar title="Order Details" />
         <div className="p-8 text-center">
-          <p className="text-gray-500">Pesanan tidak ditemukan.</p>
-          <Button className="mt-4" onClick={() => router.push('/orders')}>Kembali ke Pesanan</Button>
+          <p className="text-gray-500">Order not found.</p>
+          <Button className="mt-4" onClick={() => router.push('/orders')}>Back to Orders</Button>
         </div>
       </div>
     )
@@ -43,11 +43,11 @@ export default function OrderDetailPage() {
 
   return (
     <div>
-      <TopBar title={`Pesanan ${order.order_number}`} />
+      <TopBar title={`Order ${order.order_number}`} />
       <div className="p-8 max-w-2xl">
         <Button variant="outline" size="sm" onClick={() => router.push('/orders')} className="mb-6">
           <ArrowLeft className="h-4 w-4" />
-          Kembali
+          Back
         </Button>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
@@ -65,19 +65,19 @@ export default function OrderDetailPage() {
 
           {order.description && (
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Deskripsi</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Description</p>
               <p className="text-gray-700">{order.description}</p>
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-4 pt-2">
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Harga</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Price</p>
               <p className="font-semibold text-gray-900">{formatIDR(order.price)}</p>
             </div>
             {order.deposit_paid && (
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">DP Dibayar</p>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Payed DP</p>
                 <p className="font-semibold text-emerald-600">{formatIDR(order.deposit_amount)}</p>
               </div>
             )}
@@ -86,7 +86,7 @@ export default function OrderDetailPage() {
               <p className="text-gray-700">{formatDate(order.deadline)}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Tanggal Order</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Order Placed</p>
               <p className="text-gray-700">{formatDate(order.order_date)}</p>
             </div>
           </div>

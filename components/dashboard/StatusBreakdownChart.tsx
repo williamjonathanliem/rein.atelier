@@ -30,7 +30,7 @@ function CustomLabel({ cx, cy, totalOrders }: { cx: number; cy: number; totalOrd
   return (
     <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
       <tspan x={cx} dy="-8" fontSize="22" fontWeight="700" fill="#111827">{totalOrders}</tspan>
-      <tspan x={cx} dy="20" fontSize="11" fill="#9ca3af">pesanan</tspan>
+      <tspan x={cx} dy="20" fontSize="11" fill="#9ca3af">Orders</tspan>
     </text>
   )
 }
@@ -44,10 +44,10 @@ export function StatusBreakdownChart({ data, totalOrders }: StatusBreakdownChart
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-      <p className="text-sm font-semibold text-gray-700 mb-4">Status Pesanan</p>
+      <p className="text-sm font-semibold text-gray-700 mb-4">No orders yet..</p>
       {data.length === 0 ? (
         <div className="h-[200px] flex items-center justify-center text-gray-400 text-sm">
-          Belum ada data
+          No orders yet..
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={200}>
