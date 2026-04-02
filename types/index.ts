@@ -37,6 +37,8 @@ export interface Order {
   invoice_date_format: string
   whatsapp_sent: boolean
   notes?: string
+  product_type?: string
+  reference_image_url?: string
   created_at: string
   updated_at: string
 }
