@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -9,11 +9,13 @@ import {
   Columns2,
   Users,
   Settings,
+  LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSettingsContext } from '@/contexts/SettingsContext'
 import { useOrdersContext } from '@/contexts/OrdersContext'
 import { useAlerts } from '@/hooks/useAlerts'
+import { supabase } from '@/lib/supabase'
 
 const navItems = [
   { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
@@ -25,10 +27,16 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const { getSetting } = useSettingsContext()
   const { orders } = useOrdersContext()
   const alerts = useAlerts(orders)
   const businessName = getSetting('business_name') || 'rein.atelier'
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.replace('/login')
+  }
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-60 bg-white border-r border-gray-100 flex flex-col z-40">
@@ -72,8 +80,8 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Settings at bottom */}
-      <div className="px-3 pb-4 border-t border-gray-100 pt-3">
+      {/* Bottom actions */}
+      <div className="px-3 pb-4 border-t border-gray-100 pt-3 flex flex-col gap-1">
         <Link
           href="/settings"
           className={cn(
@@ -86,6 +94,13 @@ export function Sidebar() {
           <Settings className="h-4 w-4 shrink-0" />
           Settings
         </Link>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors w-full text-left"
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          Sign Out
+        </button>
       </div>
     </aside>
   )

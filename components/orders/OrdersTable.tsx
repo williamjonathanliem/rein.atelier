@@ -79,7 +79,7 @@ export function OrdersTable() {
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <Input
-          placeholder="Cari pesanan..."
+          placeholder="Search orders..."
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1) }}
           className="max-w-xs"
@@ -87,7 +87,7 @@ export function OrdersTable() {
         <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setPage(1) }}>
           <SelectTrigger className="w-36"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Semua Status</SelectItem>
+            <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="in_progress">In Progress</SelectItem>
             <SelectItem value="revision">Revision</SelectItem>
@@ -96,9 +96,9 @@ export function OrdersTable() {
           </SelectContent>
         </Select>
         <Select value={priorityFilter} onValueChange={v => { setPriorityFilter(v); setPage(1) }}>
-          <SelectTrigger className="w-36"><SelectValue placeholder="Prioritas" /></SelectTrigger>
+          <SelectTrigger className="w-36"><SelectValue placeholder="Priority" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Semua Prioritas</SelectItem>
+            <SelectItem value="all">All Priorities</SelectItem>
             <SelectItem value="low">Low</SelectItem>
             <SelectItem value="medium">Medium</SelectItem>
             <SelectItem value="high">High</SelectItem>
@@ -106,9 +106,9 @@ export function OrdersTable() {
           </SelectContent>
         </Select>
         <Select value={paymentFilter} onValueChange={v => { setPaymentFilter(v); setPage(1) }}>
-          <SelectTrigger className="w-36"><SelectValue placeholder="Pembayaran" /></SelectTrigger>
+          <SelectTrigger className="w-36"><SelectValue placeholder="Payment" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Semua Pembayaran</SelectItem>
+            <SelectItem value="all">All Payment</SelectItem>
             <SelectItem value="unpaid">Unpaid</SelectItem>
             <SelectItem value="partial">Partial</SelectItem>
             <SelectItem value="paid">Paid</SelectItem>
@@ -122,7 +122,7 @@ export function OrdersTable() {
           </Button>
         </Link>
         <Button onClick={() => { setEditOrder(null); setAddOpen(true) }}>
-          + Tambah Pesanan
+          + Add Order
         </Button>
       </div>
 
@@ -133,14 +133,14 @@ export function OrdersTable() {
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">#</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Klien</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Deskripsi</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Harga</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">DP</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Client</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Description</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Price</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Deposit</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Deadline</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Prioritas</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Priority</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Bayar</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Payment</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -150,10 +150,10 @@ export function OrdersTable() {
                   <td colSpan={10}>
                     <EmptyState
                       title={search || statusFilter !== 'all' || priorityFilter !== 'all' || paymentFilter !== 'all'
-                        ? 'Tidak ada pesanan yang cocok dengan filter.'
-                        : 'Belum ada pesanan. Yuk tambah pesanan pertama! 🌸'}
+                        ? 'No orders match the current filters.'
+                        : 'No orders yet. Add your first order! 🌸'}
                       action={orders.length === 0 ? (
-                        <Button onClick={() => { setEditOrder(null); setAddOpen(true) }}>+ Tambah Pesanan</Button>
+                        <Button onClick={() => { setEditOrder(null); setAddOpen(true) }}>+ Add Order</Button>
                       ) : undefined}
                     />
                   </td>
@@ -250,7 +250,7 @@ export function OrdersTable() {
                               className="text-red-600 focus:text-red-600"
                               onClick={() => setDeleteId(order.id)}
                             >
-                              <Trash2 className="h-3.5 w-3.5" /> Hapus
+                              <Trash2 className="h-3.5 w-3.5" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -267,7 +267,7 @@ export function OrdersTable() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50">
             <p className="text-xs text-gray-500">
-              {filtered.length} pesanan · Halaman {page} dari {totalPages}
+              {filtered.length} orders · Page {page} of {totalPages}
             </p>
             <div className="flex items-center gap-1">
               <Button
@@ -314,9 +314,9 @@ export function OrdersTable() {
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={open => { if (!open) setDeleteId(null) }}
-        title="Hapus Pesanan"
-        description="Yakin ingin menghapus pesanan ini? Tindakan ini tidak bisa dibatalkan."
-        confirmLabel="Hapus"
+        title="Delete Order"
+        description="Are you sure you want to delete this order? This action cannot be undone."
+        confirmLabel="Delete"
         onConfirm={() => { if (deleteId) deleteOrder(deleteId) }}
         destructive
       />

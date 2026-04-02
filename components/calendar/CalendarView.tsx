@@ -56,13 +56,13 @@ export function CalendarView() {
           </Button>
         </div>
         <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())}>
-          Hari Ini
+          Today
         </Button>
       </div>
 
       {/* Day headers */}
       <div className="grid grid-cols-7 border-b border-gray-100">
-        {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].map(d => (
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
           <div key={d} className="py-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wide">
             {d}
           </div>
@@ -138,7 +138,7 @@ export function CalendarView() {
                   </Popover>
                 ))}
                 {dayOrders.length > 3 && (
-                  <span className="text-xs text-gray-400 px-1">+{dayOrders.length - 3} lagi</span>
+                  <span className="text-xs text-gray-400 px-1">+{dayOrders.length - 3} more</span>
                 )}
               </div>
             </div>

@@ -22,7 +22,7 @@ export function useOrders() {
         if (error) throw error
         setOrders(data ?? [])
       } catch (err: any) {
-        const msg = 'Gagal memuat pesanan: ' + err.message
+        const msg = 'Failed to load orders: ' + err.message
         setError(msg)
         toast.error(msg)
       } finally {
@@ -53,10 +53,10 @@ export function useOrders() {
 
       if (error) throw error
       setOrders(prev => [inserted, ...prev])
-      toast.success('Pesanan berhasil ditambahkan! 🌸')
+      toast.success('Order added successfully! 🌸')
       return inserted
     } catch (err: any) {
-      toast.error('Gagal menambah pesanan: ' + err.message)
+      toast.error('Failed to add order: ' + err.message)
       return null
     }
   }, [])
@@ -72,9 +72,9 @@ export function useOrders() {
       setOrders(prev =>
         prev.map(o => (o.id === id ? { ...o, ...data } : o))
       )
-      toast.success('Pesanan diperbarui!')
+      toast.success('Order updated!')
     } catch (err: any) {
-      toast.error('Gagal memperbarui pesanan: ' + err.message)
+      toast.error('Failed to update order: ' + err.message)
     }
   }, [])
 
@@ -87,9 +87,9 @@ export function useOrders() {
 
       if (error) throw error
       setOrders(prev => prev.filter(o => o.id !== id))
-      toast.success('Pesanan dihapus!')
+      toast.success('Order deleted!')
     } catch (err: any) {
-      toast.error('Gagal menghapus pesanan: ' + err.message)
+      toast.error('Failed to delete order: ' + err.message)
     }
   }, [])
 
@@ -105,7 +105,7 @@ export function useOrders() {
         prev.map(o => (o.id === id ? { ...o, status } : o))
       )
     } catch (err: any) {
-      toast.error('Gagal mengubah status: ' + err.message)
+      toast.error('Failed to update status: ' + err.message)
     }
   }, [])
 
@@ -121,7 +121,7 @@ export function useOrders() {
         prev.map(o => (o.id === id ? { ...o, payment_status } : o))
       )
     } catch (err: any) {
-      toast.error('Gagal mengubah status pembayaran: ' + err.message)
+      toast.error('Failed to update payment status: ' + err.message)
     }
   }, [])
 

@@ -101,12 +101,12 @@ export function WhatsappGenerator({ order, settings }: WhatsappGeneratorProps) {
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message)
-    toast.success('Pesan disalin! ✓')
+    toast.success('Message copied! ✓')
   }
 
   const handleOpenWhatsApp = () => {
     if (!order.client_phone) {
-      toast.error('Nomor HP klien belum diisi.')
+      toast.error('Client phone number is not set.')
       return
     }
     const phone = sanitizePhone(order.client_phone)
@@ -118,16 +118,16 @@ export function WhatsappGenerator({ order, settings }: WhatsappGeneratorProps) {
     const newVal = !sent
     setSent(newVal)
     await updateOrder(order.id, { whatsapp_sent: newVal })
-    toast.success(newVal ? 'Ditandai sudah dikirim! ✓' : 'Tandai dibatalkan.')
+    toast.success(newVal ? 'Marked as sent! ✓' : 'Mark cancelled.')
   }
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-semibold text-gray-900">Generator Pesan WhatsApp</p>
+          <p className="font-semibold text-gray-900">WhatsApp Message Generator</p>
           <p className="text-sm text-gray-500 mt-0.5">
-            Pesan untuk {order.client_name} · {order.order_number}
+            Message for {order.client_name} · {order.order_number}
           </p>
         </div>
         <Select value={lang} onValueChange={v => setLang(v as 'id' | 'en')}>
@@ -151,11 +151,11 @@ export function WhatsappGenerator({ order, settings }: WhatsappGeneratorProps) {
       <div className="flex flex-wrap items-center gap-3">
         <Button onClick={handleCopy} variant="outline" className="gap-2">
           <Copy className="h-4 w-4" />
-          Salin Pesan
+          Copy Message
         </Button>
         <Button onClick={handleOpenWhatsApp} className="gap-2">
           <MessageCircle className="h-4 w-4" />
-          Buka WhatsApp
+          Open WhatsApp
         </Button>
         <div className="ml-auto flex items-center gap-2">
           <Switch
@@ -165,8 +165,8 @@ export function WhatsappGenerator({ order, settings }: WhatsappGeneratorProps) {
           />
           <Label htmlFor="wa-sent" className="cursor-pointer normal-case text-sm font-medium text-gray-700">
             {sent
-              ? <span className="text-emerald-600">✓ WhatsApp Terkirim</span>
-              : 'Tandai Sudah Dikirim'}
+              ? <span className="text-emerald-600">✓ WhatsApp Sent</span>
+              : 'Mark as Sent'}
           </Label>
         </div>
       </div>

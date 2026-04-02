@@ -12,23 +12,23 @@ export function UpcomingDeadlines({ orders }: { orders: Order[] }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm font-semibold text-gray-700">Deadline Mendekat</p>
-        <Link href="/orders" className="text-xs text-violet-600 hover:text-violet-800 font-medium">Lihat semua →</Link>
+        <p className="text-sm font-semibold text-gray-700">Upcoming Deadlines</p>
+        <Link href="/orders" className="text-xs text-violet-600 hover:text-violet-800 font-medium">View all →</Link>
       </div>
       {orders.length === 0 ? (
         <div className="py-8 text-center text-gray-400 text-sm">
-          Tidak ada deadline yang mendekat. 🌸
+          No upcoming deadlines. 🌸
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[600px]">
             <thead>
               <tr className="border-b border-gray-100">
-                <th className="text-left pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">No. Order</th>
-                <th className="text-left pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Klien</th>
-                <th className="text-left pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Deskripsi</th>
+                <th className="text-left pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Order No.</th>
+                <th className="text-left pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Client</th>
+                <th className="text-left pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Description</th>
                 <th className="text-left pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Deadline</th>
-                <th className="text-left pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Prioritas</th>
+                <th className="text-left pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Priority</th>
                 <th className="text-left pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
                 <th className="pb-2" />
               </tr>
@@ -50,7 +50,7 @@ export function UpcomingDeadlines({ orders }: { orders: Order[] }) {
                     <td className={cn('py-2.5 pr-4 text-sm font-medium', overdue ? 'text-red-600' : soon ? 'text-amber-600' : 'text-gray-600')}>
                       <div>{formatDate(order.deadline)}</div>
                       <div className="text-xs font-normal">
-                        {overdue ? `${Math.abs(days)} hari lalu` : days === 0 ? 'Hari ini!' : `${days} hari lagi`}
+                        {overdue ? `${Math.abs(days)} days ago` : days === 0 ? 'Today!' : `${days} days left`}
                       </div>
                     </td>
                     <td className="py-2.5 pr-4"><PriorityBadge priority={order.priority} /></td>

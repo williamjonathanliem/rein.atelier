@@ -62,21 +62,21 @@ export function AddClientModal({ open, onOpenChange, editClient }: AddClientModa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{editClient ? 'Edit Klien' : 'Tambah Klien'}</DialogTitle>
+          <DialogTitle>{editClient ? 'Edit Client' : 'Add Client'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <Label className="mb-1.5 block">Nama Klien *</Label>
+            <Label className="mb-1.5 block">Client Name *</Label>
             <Input
               value={form.name}
               onChange={e => set('name', e.target.value)}
-              placeholder="Nama lengkap klien"
+              placeholder="Client full name"
               required
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="mb-1.5 block">Nomor HP / WhatsApp</Label>
+              <Label className="mb-1.5 block">Phone / WhatsApp Number</Label>
               <Input
                 value={form.phone}
                 onChange={e => set('phone', e.target.value)}
@@ -94,18 +94,18 @@ export function AddClientModal({ open, onOpenChange, editClient }: AddClientModa
             </div>
           </div>
           <div>
-            <Label className="mb-1.5 block">Catatan</Label>
+            <Label className="mb-1.5 block">Notes</Label>
             <Textarea
               value={form.notes}
               onChange={e => set('notes', e.target.value)}
-              placeholder="Preferensi, info penting tentang klien..."
+              placeholder="Preferences, important info about the client..."
               rows={2}
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Batal</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={saving}>
-              {saving ? 'Menyimpan...' : editClient ? 'Simpan Perubahan' : 'Tambah Klien'}
+              {saving ? 'Saving...' : editClient ? 'Save Changes' : 'Add Client'}
             </Button>
           </DialogFooter>
         </form>

@@ -34,7 +34,7 @@ export function ClientsTable() {
   const handleDelete = async (id: string) => {
     const clientOrders = getClientOrders(id)
     if (clientOrders.length > 0) {
-      toast.error(`Klien ini memiliki ${clientOrders.length} pesanan yang terhubung.`)
+      toast.error(`This client has ${clientOrders.length} linked orders and cannot be deleted.`)
       return
     }
     await deleteClient(id)
@@ -51,25 +51,25 @@ export function ClientsTable() {
     <div>
       <div className="flex items-center gap-3 mb-4">
         <Input
-          placeholder="Cari klien..."
+          placeholder="Search clients..."
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="max-w-xs"
         />
         <div className="flex-1" />
-        <Button onClick={() => { setEditClient(null); setAddOpen(true) }}>+ Tambah Klien</Button>
+        <Button onClick={() => { setEditClient(null); setAddOpen(true) }}>+ Add Client</Button>
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Nama</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Telepon</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Name</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Phone</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Email</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Catatan</th>
-              <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide"># Order</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Belanja</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Notes</th>
+              <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide"># Orders</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Spent</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -77,7 +77,7 @@ export function ClientsTable() {
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center py-12 text-gray-400 text-sm">
-                  {search ? 'Tidak ada klien yang cocok.' : 'Belum ada klien. Yuk tambah klien pertama! 🌸'}
+                  {search ? 'No matching clients found.' : 'No clients yet. Add your first client! 🌸'}
                 </td>
               </tr>
             ) : (
@@ -129,7 +129,7 @@ export function ClientsTable() {
                       <tr key={`${client.id}-expanded`} className="bg-violet-50/30">
                         <td colSpan={7} className="px-6 py-3">
                           {clientOrders.length === 0 ? (
-                            <p className="text-sm text-gray-400 py-2">Belum ada pesanan untuk klien ini.</p>
+                            <p className="text-sm text-gray-400 py-2">No orders for this client yet.</p>
                           ) : (
                             <div className="flex flex-col gap-1.5">
                               {clientOrders.map(order => (
@@ -162,13 +162,13 @@ export function ClientsTable() {
       <ConfirmDialog
         open={!!deleteId}
         onOpenChange={open => { if (!open) setDeleteId(null) }}
-        title="Hapus Klien"
+        title="Delete Client"
         description={
           deleteClientOrders.length > 0
-            ? `Klien ini memiliki ${deleteClientOrders.length} pesanan yang terhubung dan tidak bisa dihapus.`
-            : `Yakin ingin menghapus ${clientToDelete?.name}?`
+            ? `This client has ${deleteClientOrders.length} linked orders and cannot be deleted.`
+            : `Are you sure you want to delete ${clientToDelete?.name}?`
         }
-        confirmLabel={deleteClientOrders.length > 0 ? 'OK' : 'Hapus'}
+        confirmLabel={deleteClientOrders.length > 0 ? 'OK' : 'Delete'}
         onConfirm={() => deleteId && handleDelete(deleteId)}
         destructive={deleteClientOrders.length === 0}
       />

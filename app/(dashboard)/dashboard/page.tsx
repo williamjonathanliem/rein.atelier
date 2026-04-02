@@ -38,31 +38,31 @@ export default function DashboardPage() {
         {/* Stat cards */}
         <div className="grid grid-cols-4 gap-4 mb-6">
           <StatCard
-            title="Pendapatan Bulan Ini"
+            title="Revenue This Month"
             value={formatIDR(stats.revenueThisMonth)}
             delta={stats.revenueDelta}
-            subText="vs bulan lalu"
+            subText="vs last month"
             accent="violet"
             icon={DollarSign}
           />
           <StatCard
-            title="Belum Dibayar"
+            title="Outstanding"
             value={formatIDR(stats.outstandingTotal)}
             subText="outstanding"
             accent="amber"
             icon={Clock}
           />
           <StatCard
-            title="Rata-rata Nilai Order"
+            title="Average Order Value"
             value={formatIDR(stats.averageOrderValue)}
             subText="per order"
             accent="emerald"
             icon={TrendingUp}
           />
           <StatCard
-            title="Total Pesanan"
+            title="Total Orders"
             value={String(stats.totalOrders)}
-            subText={`+${stats.ordersThisMonth} bulan ini`}
+            subText={`+${stats.ordersThisMonth} this month`}
             accent="blue"
             icon={ShoppingBag}
           />

@@ -20,7 +20,7 @@ export function useClients() {
         if (error) throw error
         setClients(data ?? [])
       } catch (err: any) {
-        toast.error('Gagal memuat klien: ' + err.message)
+        toast.error('Failed to load clients: ' + err.message)
       } finally {
         setLoading(false)
       }
@@ -40,10 +40,10 @@ export function useClients() {
 
       if (error) throw error
       setClients(prev => [...prev, inserted].sort((a, b) => a.name.localeCompare(b.name)))
-      toast.success('Klien berhasil ditambahkan!')
+      toast.success('Client added successfully!')
       return inserted
     } catch (err: any) {
-      toast.error('Gagal menambah klien: ' + err.message)
+      toast.error('Failed to add client: ' + err.message)
       return null
     }
   }, [])
@@ -59,9 +59,9 @@ export function useClients() {
       setClients(prev =>
         prev.map(c => (c.id === id ? { ...c, ...data } : c))
       )
-      toast.success('Klien diperbarui!')
+      toast.success('Client updated!')
     } catch (err: any) {
-      toast.error('Gagal memperbarui klien: ' + err.message)
+      toast.error('Failed to update client: ' + err.message)
     }
   }, [])
 
@@ -74,9 +74,9 @@ export function useClients() {
 
       if (error) throw error
       setClients(prev => prev.filter(c => c.id !== id))
-      toast.success('Klien dihapus!')
+      toast.success('Client deleted!')
     } catch (err: any) {
-      toast.error('Gagal menghapus klien: ' + err.message)
+      toast.error('Failed to delete client: ' + err.message)
     }
   }, [])
 

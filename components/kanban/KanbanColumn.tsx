@@ -50,7 +50,7 @@ export function KanbanColumn({ status, orders, onEdit, onAdd }: KanbanColumnProp
         <div className="flex items-center gap-2 mb-1">
           <StatusBadge status={status} />
           <span className="text-xs text-gray-500">
-            {orders.length} pesanan
+            {orders.length} orders
           </span>
         </div>
         <p className="text-xs text-gray-400">{formatIDR(total)}</p>
@@ -74,7 +74,7 @@ export function KanbanColumn({ status, orders, onEdit, onAdd }: KanbanColumnProp
             onClick={onAdd}
           >
             <Plus className="h-4 w-4" />
-            Tambah Pesanan
+            Add Order
           </Button>
         </div>
       )}

@@ -153,28 +153,28 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{editOrder ? 'Edit Pesanan' : 'Tambah Pesanan'}</DialogTitle>
+          <DialogTitle>{editOrder ? 'Edit Order' : 'Add Order'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-2 gap-6">
             {/* Left column — Client & Details */}
             <div className="flex flex-col gap-4">
               <div>
-                <Label className="mb-1.5 block">Pilih Klien yang Ada</Label>
+                <Label className="mb-1.5 block">Select Existing Client</Label>
                 <Popover open={clientSearchOpen} onOpenChange={setClientSearchOpen}>
                   <PopoverTrigger asChild>
                     <Button type="button" variant="outline" className="w-full justify-between">
                       {form.client_id
                         ? clients.find(c => c.id === form.client_id)?.name ?? form.client_name
-                        : 'Cari klien...'}
+                        : 'Search client...'}
                       <ChevronsUpDown className="h-4 w-4 opacity-40" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[300px] p-0">
                     <Command>
-                      <CommandInput placeholder="Cari klien..." />
+                      <CommandInput placeholder="Search client..." />
                       <CommandList>
-                        <CommandEmpty>Klien tidak ditemukan.</CommandEmpty>
+                        <CommandEmpty>No client found.</CommandEmpty>
                         <CommandGroup>
                           {clients.map(c => (
                             <CommandItem key={c.id} value={c.name} onSelect={() => selectClient(c.id)}>
@@ -193,43 +193,43 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
               </div>
 
               <div>
-                <Label className="mb-1.5 block">Nama Klien *</Label>
-                <Input value={form.client_name} onChange={e => set('client_name', e.target.value)} required placeholder="Nama klien" />
+                <Label className="mb-1.5 block">Client Name *</Label>
+                <Input value={form.client_name} onChange={e => set('client_name', e.target.value)} required placeholder="Client name" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="mb-1.5 block">Nomor HP</Label>
+                  <Label className="mb-1.5 block">Phone Number</Label>
                   <Input value={form.client_phone} onChange={e => set('client_phone', e.target.value)} placeholder="08123456789" />
                 </div>
                 <div>
                   <Label className="mb-1.5 block">Email</Label>
-                  <Input type="email" value={form.client_email} onChange={e => set('client_email', e.target.value)} placeholder="email@contoh.com" />
+                  <Input type="email" value={form.client_email} onChange={e => set('client_email', e.target.value)} placeholder="email@example.com" />
                 </div>
               </div>
               <div>
-                <Label className="mb-1.5 block">Alamat</Label>
-                <Textarea value={form.client_address} onChange={e => set('client_address', e.target.value)} placeholder="Alamat pengiriman (opsional)" rows={2} />
+                <Label className="mb-1.5 block">Address</Label>
+                <Textarea value={form.client_address} onChange={e => set('client_address', e.target.value)} placeholder="Delivery address (optional)" rows={2} />
               </div>
               <div>
-                <Label className="mb-1.5 block">Deskripsi Pesanan *</Label>
+                <Label className="mb-1.5 block">Order Description *</Label>
                 <Textarea
                   value={form.description}
                   onChange={e => set('description', e.target.value)}
-                  placeholder="Contoh: Buket bunga pipe cleaner 10 tangkai, warna pink dan putih, dengan pita satin"
+                  placeholder="E.g. Pipe cleaner flower bouquet, 10 stems, pink and white with satin ribbon"
                   rows={3}
                   required
                 />
               </div>
               <div>
-                <Label className="mb-1.5 block">Catatan Internal</Label>
-                <Textarea value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Catatan internal tentang pesanan ini..." rows={2} />
+                <Label className="mb-1.5 block">Internal Notes</Label>
+                <Textarea value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Internal notes about this order..." rows={2} />
               </div>
             </div>
 
             {/* Right column — Order Config */}
             <div className="flex flex-col gap-4">
               <div>
-                <Label className="mb-1.5 block">Harga *</Label>
+                <Label className="mb-1.5 block">Price *</Label>
                 <Input type="number" value={form.price} onChange={e => set('price', e.target.value)} placeholder="0" min="0" required />
               </div>
               <div className="flex items-center gap-3">
@@ -238,16 +238,16 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
                   checked={form.deposit_paid}
                   onCheckedChange={v => set('deposit_paid', v)}
                 />
-                <Label htmlFor="deposit-paid" className="cursor-pointer normal-case text-sm font-medium text-gray-700">DP Sudah Dibayar</Label>
+                <Label htmlFor="deposit-paid" className="cursor-pointer normal-case text-sm font-medium text-gray-700">Deposit Paid</Label>
               </div>
               {form.deposit_paid && (
                 <div>
-                  <Label className="mb-1.5 block">Jumlah DP</Label>
+                  <Label className="mb-1.5 block">Deposit Amount</Label>
                   <Input type="number" value={form.deposit_amount} onChange={e => set('deposit_amount', e.target.value)} placeholder="0" min="0" />
                 </div>
               )}
               <div>
-                <Label className="mb-1.5 block">Tanggal Order</Label>
+                <Label className="mb-1.5 block">Order Date</Label>
                 <Input type="date" value={form.order_date} onChange={e => set('order_date', e.target.value)} />
               </div>
               <div>
@@ -255,7 +255,7 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
                 <Input type="date" value={form.deadline} onChange={e => set('deadline', e.target.value)} required />
               </div>
               <div>
-                <Label className="mb-1.5 block">Tanggal Jatuh Tempo (opsional)</Label>
+                <Label className="mb-1.5 block">Due Date (optional)</Label>
                 <Input type="date" value={form.due_date} onChange={e => set('due_date', e.target.value)} />
               </div>
               <div>
@@ -272,7 +272,7 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
                 </Select>
               </div>
               <div>
-                <Label className="mb-1.5 block">Prioritas</Label>
+                <Label className="mb-1.5 block">Priority</Label>
                 <Select value={form.priority} onValueChange={v => set('priority', v as Order['priority'])}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -284,7 +284,7 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
                 </Select>
               </div>
               <div>
-                <Label className="mb-1.5 block">Status Pembayaran</Label>
+                <Label className="mb-1.5 block">Payment Status</Label>
                 <Select value={form.payment_status} onValueChange={v => set('payment_status', v as Order['payment_status'])}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -298,9 +298,9 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
           </div>
 
           <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Batal</Button>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" disabled={saving}>
-              {saving ? 'Menyimpan...' : editOrder ? 'Simpan Perubahan' : 'Tambah Pesanan'}
+              {saving ? 'Saving...' : editOrder ? 'Save Changes' : 'Add Order'}
             </Button>
           </DialogFooter>
         </form>

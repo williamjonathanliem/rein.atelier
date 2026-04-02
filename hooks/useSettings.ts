@@ -24,7 +24,7 @@ export function useSettings() {
         }
         setSettings(map)
       } catch (err: any) {
-        toast.error('Gagal memuat pengaturan: ' + err.message)
+        toast.error('Failed to load settings: ' + err.message)
       } finally {
         setLoading(false)
       }
@@ -46,7 +46,7 @@ export function useSettings() {
       if (error) throw error
       setSettings(prev => ({ ...prev, [key]: value }))
     } catch (err: any) {
-      toast.error('Gagal menyimpan pengaturan: ' + err.message)
+      toast.error('Failed to save setting: ' + err.message)
     }
   }, [])
 
@@ -64,9 +64,9 @@ export function useSettings() {
 
       if (error) throw error
       setSettings(prev => ({ ...prev, ...updates }))
-      toast.success('Pengaturan berhasil disimpan!')
+      toast.success('Settings saved successfully!')
     } catch (err: any) {
-      toast.error('Gagal menyimpan pengaturan: ' + err.message)
+      toast.error('Failed to save settings: ' + err.message)
     }
   }, [])
 

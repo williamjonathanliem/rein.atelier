@@ -1,176 +1,222 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeft, MessageCircle, FileText } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { InvoiceStudio } from '@/components/invoice/InvoiceStudio'
-import { WhatsappGenerator } from '@/components/whatsapp/WhatsappGenerator'
-import { useOrdersContext } from '@/contexts/OrdersContext'
-import { useSettingsContext } from '@/contexts/SettingsContext'
+import { useEffect, useState, useCallback } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { cn } from '@/lib/utils'
-import type { Order } from '@/types'
+import { InvoiceStudio } from '@/components/invoice/InvoiceStudio'
+import type { Order, Settings, InvoiceTemplate } from '@/types'
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function getNextInvoiceNum(prefix: string): Promise<string> {
-  // Use a timestamp-based suffix to guarantee uniqueness
+function todayStr(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+async function fetchSettings(): Promise<Settings> {
+  const { data, error } = await supabase.from('settings').select('key, value')
+  if (error) return {}
+  return Object.fromEntries((data ?? []).map((r: { key: string; value: string }) => [r.key, r.value ?? '']))
+}
+
+async function generateInvoiceNumber(prefix: string): Promise<string> {
   const { data } = await supabase
     .from('orders')
     .select('order_number')
     .order('created_at', { ascending: false })
-    .limit(20)
+    .limit(50)
 
-  if (!data || data.length === 0) return `${prefix}001`
+  // Find highest INV- number among existing orders (they store invoice numbers in notes or we generate fresh)
+  // Since invoice numbers aren't stored separately, generate based on order count
+  const { count } = await supabase
+    .from('orders')
+    .select('id', { count: 'exact', head: true })
 
-  // Try to find the highest invoice-prefixed number already used
-  const nums = data
-    .map(r => {
-      const n = parseInt(String(r.order_number).replace(prefix, ''), 10)
-      return isNaN(n) ? 0 : n
-    })
-    .filter(n => n > 0)
-
-  const max = nums.length > 0 ? Math.max(...nums) : 0
-  return `${prefix}${String(max + 1).padStart(3, '0')}`
+  const next = (count ?? 0) + 1
+  return `${prefix}${String(next).padStart(3, '0')}`
 }
 
-// ── Page ───────────────────────────────────────────────────────────────────
-
-type Tab = 'invoice' | 'whatsapp'
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function InvoicePage() {
-  const { orderId } = useParams<{ orderId: string }>()
+  const params = useParams<{ orderId: string }>()
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const initialTab = (searchParams.get('tab') ?? 'invoice') as Tab
+  const orderId = params.orderId
 
-  const { orders, updateOrder, loading: ordersLoading } = useOrdersContext()
-  const { settings, loading: settingsLoading } = useSettingsContext()
+  const [order, setOrder] = useState<Order | null>(null)
+  const [settings, setSettings] = useState<Settings>({})
+  const [invNum, setInvNum] = useState<string>('INV-001')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const [tab, setTab] = useState<Tab>(initialTab)
-  const [invNum, setInvNum] = useState<string>('')
-  const [invNumLoading, setInvNumLoading] = useState(true)
-
-  const order = orders.find(o => o.id === orderId) as Order | undefined
-
-  // Generate invoice number once settings are ready
   useEffect(() => {
-    if (settingsLoading) return
-    const prefix = settings.invoice_number_prefix || 'INV-'
-    getNextInvoiceNum(prefix).then(num => {
-      setInvNum(num)
-      setInvNumLoading(false)
-    })
-  }, [settings, settingsLoading])
+    async function load() {
+      setLoading(true)
+      try {
+        const [{ data: orderData, error: orderErr }, settingsData] = await Promise.all([
+          supabase.from('orders').select('*').eq('id', orderId).single(),
+          fetchSettings(),
+        ])
 
-  const handleDesignChange = useCallback(
-    (design: Partial<Pick<Order, 'invoice_template' | 'invoice_color' | 'invoice_font' | 'invoice_date_format'>>) => {
-      if (order) updateOrder(order.id, design)
-    },
-    [order, updateOrder]
-  )
+        if (orderErr || !orderData) {
+          setError('Order not found.')
+          return
+        }
 
-  const loading = ordersLoading || settingsLoading || invNumLoading
+        setOrder(orderData as Order)
+        setSettings(settingsData)
 
-  // ── Render ────────────────────────────────────────────────────────────────
+        const prefix = settingsData['invoice_number_prefix'] ?? 'INV-'
+        const num = await generateInvoiceNumber(prefix)
+        setInvNum(num)
+      } catch (e) {
+        setError('Failed to load data.')
+        console.error(e)
+      } finally {
+        setLoading(false)
+      }
+    }
+    if (orderId) load()
+  }, [orderId])
 
+  const handleDesignChange = useCallback(async (design: {
+    invoice_template: InvoiceTemplate
+    invoice_color: string
+    invoice_font: string
+    invoice_date_format: string
+  }) => {
+    if (!orderId) return
+    await supabase.from('orders').update(design).eq('id', orderId)
+  }, [orderId])
+
+  // ── Loading state ──
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-violet-200 border-t-violet-500 rounded-full animate-spin" />
+      <div style={{
+        height: '100vh', background: '#0f0f11',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexDirection: 'column', gap: 16,
+        fontFamily: "'Instrument Sans', sans-serif", color: '#9998a8',
+      }}>
+        <div style={{
+          width: 32, height: 32, border: '3px solid rgba(124,108,252,0.3)',
+          borderTopColor: '#7c6cfc', borderRadius: '50%',
+          animation: 'spin 0.7s linear infinite',
+        }} />
+        <span style={{ fontSize: 14 }}>Loading invoice…</span>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     )
   }
 
-  if (!order) {
+  // ── Error state ──
+  if (error || !order) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
-        <p className="text-gray-500">Pesanan tidak ditemukan.</p>
-        <Button onClick={() => router.push('/orders')}>Kembali ke Pesanan</Button>
+      <div style={{
+        height: '100vh', background: '#0f0f11',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexDirection: 'column', gap: 16,
+        fontFamily: "'Instrument Sans', sans-serif", color: '#f0eff4',
+      }}>
+        <p style={{ color: '#f87171', fontSize: 16 }}>{error ?? 'Order not found.'}</p>
+        <Link
+          href="/orders"
+          style={{
+            background: '#7c6cfc', color: '#fff', padding: '8px 20px',
+            borderRadius: 8, textDecoration: 'none', fontSize: 13, fontWeight: 600,
+          }}
+        >
+          ← Back to Orders
+        </Link>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Top navigation bar */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-100 flex items-center gap-4 px-6 h-14">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push('/orders')}
-          className="gap-1.5 text-gray-500"
+    <>
+      {/* Google Fonts for invoice templates */}
+      <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap"
+        rel="stylesheet"
+      />
+
+      {/* Back button — absolutely positioned over the invoice topbar */}
+      <div style={{
+        position: 'fixed', top: 10, left: 12, zIndex: 200,
+        display: 'flex', alignItems: 'center',
+      }}>
+        <button
+          onClick={() => router.back()}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'rgba(30,30,34,0.9)', border: '1px solid #2a2a2e',
+            borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
+            fontFamily: "'Instrument Sans', sans-serif",
+            fontSize: 13, fontWeight: 500, color: '#9998a8',
+            backdropFilter: 'blur(4px)',
+            transition: 'all 0.15s',
+          }}
         >
-          <ArrowLeft className="h-4 w-4" />
-          Kembali
-        </Button>
-
-        <div className="h-4 w-px bg-gray-200" />
-
-        {/* Order info */}
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-xs text-gray-400">{order.order_number}</span>
-          <span className="text-gray-300">·</span>
-          <span className="text-sm font-medium text-gray-700">{order.client_name}</span>
-        </div>
-
-        <div className="flex-1" />
-
-        {/* Tab switcher */}
-        <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
-          <button
-            onClick={() => setTab('invoice')}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
-              tab === 'invoice'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            )}
-          >
-            <FileText className="h-3.5 w-3.5" />
-            Invoice
-          </button>
-          <button
-            onClick={() => setTab('whatsapp')}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
-              tab === 'whatsapp'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            )}
-          >
-            <MessageCircle className="h-3.5 w-3.5" />
-            WhatsApp
-            {order.whatsapp_sent && (
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            )}
-          </button>
-        </div>
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path d="M19 12H5M5 12l7-7M5 12l7 7" />
+          </svg>
+          Back
+        </button>
       </div>
 
-      {/* Tab content */}
-      <div className="flex-1">
-        {tab === 'invoice' ? (
-          // Invoice Studio fills the full remaining height
-          <div className="h-[calc(100vh-56px)]">
-            <InvoiceStudio
-              order={order}
-              settings={settings}
-              invNum={invNum}
-              onDesignChange={handleDesignChange}
-            />
-          </div>
-        ) : (
-          // WhatsApp generator — centred card layout
-          <div className="max-w-2xl mx-auto py-8 px-6">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <WhatsappGenerator order={order} settings={settings} />
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+      <InvoiceStudio
+        // Business info from settings
+        businessName={settings['business_name']}
+        businessEmail={settings['business_email']}
+        businessPhone={settings['business_phone']}
+        businessAddress={settings['business_address']}
+        businessLogoUrl={settings['business_logo_url'] || undefined}
+        taxName={settings['tax_name']}
+        taxNumber={settings['tax_number']}
+
+        // Client from order snapshot
+        clientName={order.client_name}
+        clientPhone={order.client_phone}
+        clientEmail={order.client_email}
+        clientAddress={order.client_address}
+        clientRef={order.order_number}
+
+        // Invoice metadata
+        invoiceNumber={invNum}
+        currency="IDR"
+        issueDate={todayStr()}
+        dueDate={order.deadline}
+
+        // Pre-fill one line item from the order
+        initialItems={[{
+          desc: order.description ?? '',
+          sub: '',
+          qty: 1,
+          price: order.price,
+        }]}
+
+        // Payment defaults from settings
+        paymentBank={settings['default_payment_bank']}
+        paymentAccountName={settings['default_payment_account_name']}
+        paymentAccountNumber={settings['default_payment_account_number']}
+
+        // Notes & terms defaults
+        defaultNotes={settings['default_invoice_notes']}
+        defaultTerms={settings['default_invoice_terms']}
+
+        // Design preferences stored per order
+        initialTemplate={order.invoice_template}
+        initialColor={order.invoice_color}
+        initialFont={order.invoice_font}
+        initialDateFormat={order.invoice_date_format}
+
+        // Paid status from payment_status
+        initialPaid={order.payment_status === 'paid'}
+
+        // Persist design changes back to order row
+        onDesignChange={handleDesignChange}
+      />
+    </>
   )
 }

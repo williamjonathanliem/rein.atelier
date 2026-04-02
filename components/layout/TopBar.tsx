@@ -31,7 +31,7 @@ export function TopBar({ title }: TopBarProps) {
         </PopoverTrigger>
         <PopoverContent align="end" className="w-80 p-0">
           <div className="px-4 py-3 border-b border-gray-100">
-            <p className="font-semibold text-sm text-gray-900">Notifikasi Deadline</p>
+            <p className="font-semibold text-sm text-gray-900">Deadline Notifications</p>
           </div>
           <div className="max-h-72 overflow-y-auto">
             {alerts.total === 0 ? (
@@ -52,7 +52,7 @@ export function TopBar({ title }: TopBarProps) {
                         {order.client_name}
                       </p>
                       <p className="text-xs text-red-500">
-                        Terlambat · {formatDate(order.deadline)}
+                        Overdue · {formatDate(order.deadline)}
                       </p>
                     </div>
                   </Link>
@@ -69,7 +69,7 @@ export function TopBar({ title }: TopBarProps) {
                         {order.client_name}
                       </p>
                       <p className="text-xs text-amber-600">
-                        Segera · {formatDate(order.deadline)}
+                        Due soon · {formatDate(order.deadline)}
                       </p>
                     </div>
                   </Link>
