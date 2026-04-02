@@ -80,6 +80,7 @@ export interface InvoiceStudioProps {
     invoice_font: string
     invoice_date_format: string
   }) => void
+  onBack?: () => void
 }
 
 // ─── DESIGN TOKENS — matches the rein.atelier dashboard light theme ───────────
@@ -352,7 +353,7 @@ export function InvoiceStudio({
   defaultTerms = 'Payment is due within 14 days of receiving this invoice.',
   initialTemplate = 'classic', initialColor = '#a78bfa',
   initialFont = 'Instrument Sans', initialDateFormat = 'MMM D, YYYY',
-  initialPaid = false, onDesignChange,
+  initialPaid = false, onDesignChange, onBack,
 }: InvoiceStudioProps) {
 
   const today = todayStr()
@@ -453,6 +454,22 @@ export function InvoiceStudio({
 
       {/* ── TOPBAR ── */}
       <div style={{ height: 56, background: T.surface, borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', padding: '0 24px', gap: 12, flexShrink: 0, boxShadow: '0 1px 3px rgba(167,139,250,0.08)' }}>
+
+        {/* Back button */}
+        {onBack && (
+          <button onClick={onBack} style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'rgba(30,30,34,0.88)', border: '1px solid #2a2a2e',
+            borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
+            fontFamily: 'inherit', fontSize: 13, fontWeight: 500, color: '#9998a8',
+            backdropFilter: 'blur(4px)', transition: 'all 0.15s', flexShrink: 0,
+          }}>
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path d="M19 12H5M5 12l7-7M5 12l7 7" />
+            </svg>
+            Back
+          </button>
+        )}
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 2, background: T.bg, borderRadius: 10, padding: 3, border: `1px solid ${T.border}` }}>

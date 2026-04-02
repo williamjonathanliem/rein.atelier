@@ -141,31 +141,9 @@ export default function InvoicePage() {
         rel="stylesheet"
       />
 
-      {/* Back button — absolutely positioned over the invoice topbar */}
-      <div style={{
-        position: 'fixed', top: 10, left: 12, zIndex: 200,
-        display: 'flex', alignItems: 'center',
-      }}>
-        <button
-          onClick={() => router.back()}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            background: 'rgba(30,30,34,0.9)', border: '1px solid #2a2a2e',
-            borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
-            fontFamily: "'Instrument Sans', sans-serif",
-            fontSize: 13, fontWeight: 500, color: '#9998a8',
-            backdropFilter: 'blur(4px)',
-            transition: 'all 0.15s',
-          }}
-        >
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path d="M19 12H5M5 12l7-7M5 12l7 7" />
-          </svg>
-          Back
-        </button>
-      </div>
-
       <InvoiceStudio
+        // Navigation
+        onBack={() => router.back()}
         // Business info from settings
         businessName={settings['business_name']}
         businessEmail={settings['business_email']}
