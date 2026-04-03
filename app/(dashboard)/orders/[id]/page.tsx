@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ZoomIn } from 'lucide-react'
 import { TopBar } from '@/components/layout/TopBar'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/orders/StatusBadge'
@@ -11,11 +11,13 @@ import { PaymentBadge } from '@/components/orders/PaymentBadge'
 import { useOrdersContext } from '@/contexts/OrdersContext'
 import { formatIDR, formatDate } from '@/lib/utils'
 import Link from 'next/link'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const { orders, loading } = useOrdersContext()
+  const [showRefImage, setShowRefImage] = useState(false)
   const order = orders.find(o => o.id === id)
 
   if (loading) {
@@ -63,10 +65,38 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
+          {order.product_type && (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Product Type</p>
+              <p className="text-violet-600 font-medium">{order.product_type}</p>
+            </div>
+          )}
+
           {order.description && (
             <div>
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Description</p>
               <p className="text-gray-700">{order.description}</p>
+            </div>
+          )}
+
+          {order.reference_image_url && (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Reference Picture</p>
+              <div
+                className="relative group cursor-pointer rounded-xl overflow-hidden border border-gray-200 bg-gray-50 max-w-sm"
+                style={{ aspectRatio: '4/3' }}
+                onClick={() => setShowRefImage(true)}
+              >
+                <img
+                  src={order.reference_image_url}
+                  alt="Reference"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                  <ZoomIn className="h-5 w-5 text-white" />
+                  <span className="text-white text-sm font-medium">View full size</span>
+                </div>
+              </div>
             </div>
           )}
 
@@ -101,6 +131,19 @@ export default function OrderDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Reference image lightbox */}
+      {order.reference_image_url && (
+        <Dialog open={showRefImage} onOpenChange={setShowRefImage}>
+          <DialogContent className="max-w-4xl p-2 bg-black/95 border-0">
+            <img
+              src={order.reference_image_url}
+              alt="Reference"
+              className="w-full h-auto max-h-[85vh] object-contain rounded"
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }
