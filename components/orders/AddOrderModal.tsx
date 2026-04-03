@@ -154,12 +154,28 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
+  const compressImage = (file: File, maxWidth = 1400, quality = 0.82): Promise<Blob> =>
+    new Promise(resolve => {
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        const scale = Math.min(1, maxWidth / img.width)
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.round(img.width * scale)
+        canvas.height = Math.round(img.height * scale)
+        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height)
+        canvas.toBlob(blob => resolve(blob!), 'image/jpeg', quality)
+      }
+      img.src = url
+    })
+
   const uploadImage = async (file: File): Promise<string | null> => {
-    const ext = file.name.split('.').pop() ?? 'jpg'
-    const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+    const compressed = await compressImage(file)
+    const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`
     const { error } = await supabase.storage
       .from('order-references')
-      .upload(path, file, { cacheControl: '3600', upsert: false })
+      .upload(path, compressed, { contentType: 'image/jpeg', cacheControl: '3600', upsert: false })
     if (error) {
       console.error('Image upload failed:', error)
       return null
