@@ -9,6 +9,7 @@ import {
   Edit,
   Trash2,
   LayoutGrid,
+  ImageIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -21,6 +22,7 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { StatusBadge } from './StatusBadge'
 import { PriorityBadge } from './PriorityBadge'
 import { PaymentBadge } from './PaymentBadge'
@@ -46,6 +48,7 @@ export function OrdersTable() {
   const [addOpen, setAddOpen] = useState(false)
   const [editOrder, setEditOrder] = useState<Order | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null)
 
   const filtered = orders.filter(o => {
     const q = search.toLowerCase()
@@ -171,8 +174,28 @@ export function OrdersTable() {
                         <p className="font-medium text-gray-900">{order.client_name}</p>
                         {order.client_phone && <p className="text-xs text-gray-400">{order.client_phone}</p>}
                       </td>
-                      <td className="px-4 py-3 max-w-[180px]">
-                        <p className="text-gray-700 line-clamp-2 text-xs">{order.description || '—'}</p>
+                      <td className="px-4 py-3 max-w-[200px]">
+                        <div className="flex items-start gap-2">
+                          {order.reference_image_url && (
+                            <button
+                              onClick={() => setLightboxUrl(order.reference_image_url!)}
+                              className="flex-shrink-0 w-9 h-9 rounded-lg overflow-hidden border border-gray-200 hover:border-violet-400 hover:ring-2 hover:ring-violet-200 transition-all group relative"
+                              title="View reference picture"
+                            >
+                              <img
+                                src={order.reference_image_url}
+                                alt="Reference"
+                                className="w-full h-full object-cover"
+                              />
+                            </button>
+                          )}
+                          <div className="min-w-0">
+                            {order.product_type && (
+                              <p className="text-xs font-medium text-violet-600 mb-0.5">{order.product_type}</p>
+                            )}
+                            <p className="text-gray-700 line-clamp-2 text-xs">{order.description || '—'}</p>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right font-medium text-gray-900">{formatIDR(order.price)}</td>
                       <td className="px-4 py-3 text-right text-xs">
@@ -320,6 +343,19 @@ export function OrdersTable() {
         onConfirm={() => { if (deleteId) deleteOrder(deleteId) }}
         destructive
       />
+
+      {/* Reference image lightbox */}
+      <Dialog open={!!lightboxUrl} onOpenChange={open => { if (!open) setLightboxUrl(null) }}>
+        <DialogContent className="max-w-4xl p-2 bg-black/95 border-0">
+          {lightboxUrl && (
+            <img
+              src={lightboxUrl}
+              alt="Reference"
+              className="w-full h-auto max-h-[85vh] object-contain rounded"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
