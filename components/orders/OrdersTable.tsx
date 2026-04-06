@@ -10,6 +10,7 @@ import {
   Trash2,
   LayoutGrid,
   ImageIcon,
+  Eye,
 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -171,8 +172,10 @@ export function OrdersTable() {
                     <tr key={order.id} className={cn('border-b border-gray-50 hover:bg-gray-50/70 transition-colors', rowBg)}>
                       <td className="px-4 py-3 font-mono text-xs text-gray-400">{order.order_number}</td>
                       <td className="px-4 py-3">
-                        <p className="font-medium text-gray-900">{order.client_name}</p>
-                        {order.client_phone && <p className="text-xs text-gray-400">{order.client_phone}</p>}
+                        <Link href={`/orders/${order.id}`} className="group">
+                          <p className="font-medium text-gray-900 group-hover:text-violet-600 transition-colors">{order.client_name}</p>
+                          {order.client_phone && <p className="text-xs text-gray-400">{order.client_phone}</p>}
+                        </Link>
                       </td>
                       <td className="px-4 py-3 max-w-[200px]">
                         <div className="flex items-start gap-2">
@@ -259,6 +262,9 @@ export function OrdersTable() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => router.push(`/orders/${order.id}`)}>
+                              <Eye className="h-3.5 w-3.5" /> View Details
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => { setEditOrder(order); setAddOpen(true) }}>
                               <Edit className="h-3.5 w-3.5" /> Edit
                             </DropdownMenuItem>
