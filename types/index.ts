@@ -39,6 +39,8 @@ export interface Order {
   notes?: string
   product_type?: string
   reference_image_url?: string
+  handwritten_note?: string
+  delivery_time?: string
   created_at: string
   updated_at: string
 }

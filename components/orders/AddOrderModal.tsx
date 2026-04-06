@@ -63,6 +63,8 @@ const defaultForm = {
   invoice_date_format: 'MMM D, YYYY',
   whatsapp_sent: false,
   reference_image_url: '',
+  handwritten_note: '',
+  delivery_time: '',
 }
 
 export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalProps) {
@@ -104,6 +106,8 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
         invoice_date_format: editOrder.invoice_date_format,
         whatsapp_sent: editOrder.whatsapp_sent,
         reference_image_url: editOrder.reference_image_url ?? '',
+        handwritten_note: editOrder.handwritten_note ?? '',
+        delivery_time: editOrder.delivery_time ?? '',
       })
       setRefImagePreview(editOrder.reference_image_url ?? null)
     } else {
@@ -219,6 +223,8 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
       invoice_date_format: form.invoice_date_format,
       whatsapp_sent: form.whatsapp_sent,
       reference_image_url: imageUrl || undefined,
+      handwritten_note: form.handwritten_note || undefined,
+      delivery_time: form.delivery_time || undefined,
     }
 
     if (editOrder) {
@@ -286,7 +292,7 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
                     <Input value={form.client_phone} onChange={e => set('client_phone', e.target.value)} placeholder="08123456789" />
                   </div>
                   <div>
-                    <Label className="mb-1.5 block">Email</Label>
+                    <Label className="mb-1.5 block">Email <span className="text-gray-400 font-normal">(optional)</span></Label>
                     <Input type="email" value={form.client_email} onChange={e => set('client_email', e.target.value)} placeholder="email@example.com" />
                   </div>
                 </div>
@@ -371,6 +377,16 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
                   <Label className="mb-1.5 block">Internal Notes</Label>
                   <Textarea value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Internal notes about this order..." rows={2} />
                 </div>
+
+                <div>
+                  <Label className="mb-1.5 block">Handwritten Note</Label>
+                  <Textarea
+                    value={form.handwritten_note}
+                    onChange={e => set('handwritten_note', e.target.value)}
+                    placeholder="Text to write on the card/note for the customer..."
+                    rows={3}
+                  />
+                </div>
               </div>
 
               {/* Right column — Order Config */}
@@ -402,7 +418,11 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
                   <Input type="date" value={form.deadline} onChange={e => set('deadline', e.target.value)} required />
                 </div>
                 <div>
-                  <Label className="mb-1.5 block">Due Date (optional)</Label>
+                  <Label className="mb-1.5 block">Delivery Time <span className="text-gray-400 font-normal">(optional)</span></Label>
+                  <Input type="time" value={form.delivery_time} onChange={e => set('delivery_time', e.target.value)} />
+                </div>
+                <div>
+                  <Label className="mb-1.5 block">Due Date <span className="text-gray-400 font-normal">(optional)</span></Label>
                   <Input type="date" value={form.due_date} onChange={e => set('due_date', e.target.value)} />
                 </div>
                 <div>
