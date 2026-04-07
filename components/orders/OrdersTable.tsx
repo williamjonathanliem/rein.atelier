@@ -3,14 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  MoreHorizontal,
-  FileText,
-  MessageCircle,
-  Edit,
-  Trash2,
-  LayoutGrid,
-  ImageIcon,
-  Eye,
+  MoreHorizontal, FileText, MessageCircle, Edit, Trash2, LayoutGrid, Eye, ImageIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -31,14 +24,16 @@ import { AddOrderModal } from './AddOrderModal'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useOrdersContext } from '@/contexts/OrdersContext'
-import {
-  formatIDR, formatDate, isOverdue, isDueSoon, cn,
-} from '@/lib/utils'
+import { formatIDR, formatDate, isOverdue, isDueSoon, cn } from '@/lib/utils'
 import type { Order, OrderStatus, PaymentStatus } from '@/types'
 
 const PAGE_SIZE = 20
 
-export function OrdersTable() {
+interface OrdersTableProps {
+  onWhatsapp?: (order: Order) => void
+}
+
+export function OrdersTable({ onWhatsapp }: OrdersTableProps) {
   const router = useRouter()
   const { orders, loading, deleteOrder, updateStatus, updatePaymentStatus } = useOrdersContext()
   const [search, setSearch] = useState('')
@@ -65,14 +60,6 @@ export function OrdersTable() {
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-
-  const handleStatusChange = async (id: string, status: OrderStatus) => {
-    await updateStatus(id, status)
-  }
-
-  const handlePaymentChange = async (id: string, status: PaymentStatus) => {
-    await updatePaymentStatus(id, status)
-  }
 
   if (loading) {
     return <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-2 border-violet-200 border-t-violet-500 rounded-full animate-spin" /></div>
@@ -133,14 +120,15 @@ export function OrdersTable() {
       {/* Table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[900px]">
+          <table className="w-full text-sm min-w-[1000px]">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">#</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Client</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Description</th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Price</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Deposit</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Ongkir</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Total</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Deadline</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Priority</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
@@ -151,7 +139,7 @@ export function OrdersTable() {
             <tbody>
               {paginated.length === 0 ? (
                 <tr>
-                  <td colSpan={10}>
+                  <td colSpan={11}>
                     <EmptyState
                       title={search || statusFilter !== 'all' || priorityFilter !== 'all' || paymentFilter !== 'all'
                         ? 'No orders match the current filters.'
@@ -167,6 +155,9 @@ export function OrdersTable() {
                   const overdue = isOverdue(order.deadline)
                   const soon = !overdue && isDueSoon(order.deadline)
                   const rowBg = overdue ? 'bg-red-50' : soon ? 'bg-amber-50' : ''
+                  const isDelivery = order.delivery_type === 'delivery'
+                  const shippingCost = order.shipping_cost ?? 0
+                  const total = order.price + shippingCost
 
                   return (
                     <tr key={order.id} className={cn('border-b border-gray-50 hover:bg-gray-50/70 transition-colors', rowBg)}>
@@ -182,14 +173,10 @@ export function OrdersTable() {
                           {order.reference_image_url && (
                             <button
                               onClick={() => setLightboxUrl(order.reference_image_url!)}
-                              className="flex-shrink-0 w-9 h-9 rounded-lg overflow-hidden border border-gray-200 hover:border-violet-400 hover:ring-2 hover:ring-violet-200 transition-all group relative"
+                              className="flex-shrink-0 w-9 h-9 rounded-lg overflow-hidden border border-gray-200 hover:border-violet-400 hover:ring-2 hover:ring-violet-200 transition-all"
                               title="View reference picture"
                             >
-                              <img
-                                src={order.reference_image_url}
-                                alt="Reference"
-                                className="w-full h-full object-cover"
-                              />
+                              <img src={order.reference_image_url} alt="Reference" className="w-full h-full object-cover" />
                             </button>
                           )}
                           <div className="min-w-0">
@@ -201,17 +188,17 @@ export function OrdersTable() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-right font-medium text-gray-900">{formatIDR(order.price)}</td>
-                      <td className="px-4 py-3 text-right text-xs">
-                        {order.deposit_paid
-                          ? <span className="text-emerald-600">✓ {formatIDR(order.deposit_amount)}</span>
-                          : <span className="text-gray-400">—</span>}
+                      <td className="px-4 py-3 text-right">
+                        {isDelivery
+                          ? <span className="text-sm text-gray-700">{formatIDR(shippingCost)}</span>
+                          : <span className="inline-block bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5 text-xs font-semibold">Ambil</span>
+                        }
                       </td>
+                      <td className="px-4 py-3 text-right font-bold text-gray-900">{formatIDR(total)}</td>
                       <td className={cn('px-4 py-3 text-sm', overdue ? 'text-red-600 font-medium' : soon ? 'text-amber-600 font-medium' : 'text-gray-600')}>
                         {formatDate(order.deadline)}
                       </td>
-                      <td className="px-4 py-3">
-                        <PriorityBadge priority={order.priority} />
-                      </td>
+                      <td className="px-4 py-3"><PriorityBadge priority={order.priority} /></td>
                       {/* Inline status edit */}
                       <td className="px-4 py-3">
                         <Popover>
@@ -222,11 +209,7 @@ export function OrdersTable() {
                           </PopoverTrigger>
                           <PopoverContent className="w-44 p-1">
                             {(['pending', 'in_progress', 'revision', 'completed', 'cancelled'] as OrderStatus[]).map(s => (
-                              <button
-                                key={s}
-                                className="w-full text-left px-2 py-1.5 rounded-lg text-sm hover:bg-violet-50 flex items-center gap-2"
-                                onClick={() => handleStatusChange(order.id, s)}
-                              >
+                              <button key={s} className="w-full text-left px-2 py-1.5 rounded-lg text-sm hover:bg-violet-50 flex items-center gap-2" onClick={() => updateStatus(order.id, s)}>
                                 <StatusBadge status={s} />
                               </button>
                             ))}
@@ -243,11 +226,7 @@ export function OrdersTable() {
                           </PopoverTrigger>
                           <PopoverContent className="w-36 p-1">
                             {(['unpaid', 'partial', 'paid'] as PaymentStatus[]).map(s => (
-                              <button
-                                key={s}
-                                className="w-full text-left px-2 py-1.5 rounded-lg text-sm hover:bg-violet-50 flex items-center gap-2"
-                                onClick={() => handlePaymentChange(order.id, s)}
-                              >
+                              <button key={s} className="w-full text-left px-2 py-1.5 rounded-lg text-sm hover:bg-violet-50 flex items-center gap-2" onClick={() => updatePaymentStatus(order.id, s)}>
                                 <PaymentBadge status={s} />
                               </button>
                             ))}
@@ -269,16 +248,13 @@ export function OrdersTable() {
                               <Edit className="h-3.5 w-3.5" /> Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => router.push(`/invoice/${order.id}`)}>
-                              <FileText className="h-3.5 w-3.5" /> Generate Invoice
+                              <FileText className="h-3.5 w-3.5" /> Invoice
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => router.push(`/invoice/${order.id}?tab=whatsapp`)}>
+                            <DropdownMenuItem onClick={() => onWhatsapp?.(order)}>
                               <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-red-600 focus:text-red-600"
-                              onClick={() => setDeleteId(order.id)}
-                            >
+                            <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={() => setDeleteId(order.id)}>
                               <Trash2 className="h-3.5 w-3.5" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -299,36 +275,14 @@ export function OrdersTable() {
               {filtered.length} orders · Page {page} of {totalPages}
             </p>
             <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                ← Prev
-              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>← Prev</Button>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const p = i + 1
                 return (
-                  <Button
-                    key={p}
-                    variant={page === p ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setPage(p)}
-                    className="w-8 px-0"
-                  >
-                    {p}
-                  </Button>
+                  <Button key={p} variant={page === p ? 'default' : 'outline'} size="sm" onClick={() => setPage(p)} className="w-8 px-0">{p}</Button>
                 )
               })}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-              >
-                Next →
-              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>Next →</Button>
             </div>
           </div>
         )}
@@ -353,13 +307,7 @@ export function OrdersTable() {
       {/* Reference image lightbox */}
       <Dialog open={!!lightboxUrl} onOpenChange={open => { if (!open) setLightboxUrl(null) }}>
         <DialogContent className="max-w-4xl p-2 bg-black/95 border-0">
-          {lightboxUrl && (
-            <img
-              src={lightboxUrl}
-              alt="Reference"
-              className="w-full h-auto max-h-[85vh] object-contain rounded"
-            />
-          )}
+          {lightboxUrl && <img src={lightboxUrl} alt="Reference" className="w-full h-auto max-h-[85vh] object-contain rounded" />}
         </DialogContent>
       </Dialog>
     </div>

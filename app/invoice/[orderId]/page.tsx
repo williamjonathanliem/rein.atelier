@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { InvoiceStudio } from '@/components/invoice/InvoiceStudio'
+import { AREA_LABELS } from '@/lib/shippingRates'
 import type { Order, Settings, InvoiceTemplate } from '@/types'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -21,18 +22,9 @@ async function fetchSettings(): Promise<Settings> {
 }
 
 async function generateInvoiceNumber(prefix: string): Promise<string> {
-  const { data } = await supabase
-    .from('orders')
-    .select('order_number')
-    .order('created_at', { ascending: false })
-    .limit(50)
-
-  // Find highest INV- number among existing orders (they store invoice numbers in notes or we generate fresh)
-  // Since invoice numbers aren't stored separately, generate based on order count
   const { count } = await supabase
     .from('orders')
     .select('id', { count: 'exact', head: true })
-
   const next = (count ?? 0) + 1
   return `${prefix}${String(next).padStart(3, '0')}`
 }
@@ -133,6 +125,25 @@ export default function InvoicePage() {
     )
   }
 
+  // Build invoice line items — bouquet + optional shipping
+  const invoiceItems = [
+    {
+      desc: order.description ?? '',
+      sub: order.product_type ?? '',
+      qty: 1,
+      price: order.price,
+    },
+    ...(order.delivery_type === 'delivery' && (order.shipping_cost ?? 0) > 0
+      ? [{
+          desc: 'Ongkos Kirim',
+          sub: `${AREA_LABELS[order.shipping_origin ?? ''] ?? ''} → ${AREA_LABELS[order.shipping_destination ?? ''] ?? ''}`,
+          qty: 1,
+          price: order.shipping_cost,
+        }]
+      : []
+    ),
+  ]
+
   return (
     <>
       {/* Google Fonts for invoice templates */}
@@ -142,8 +153,8 @@ export default function InvoicePage() {
       />
 
       <InvoiceStudio
-        // Navigation
         onBack={() => router.back()}
+
         // Business info from settings
         businessName={settings['business_name']}
         businessEmail={settings['business_email']}
@@ -166,13 +177,8 @@ export default function InvoicePage() {
         issueDate={todayStr()}
         dueDate={order.deadline}
 
-        // Pre-fill one line item from the order
-        initialItems={[{
-          desc: order.description ?? '',
-          sub: '',
-          qty: 1,
-          price: order.price,
-        }]}
+        // Line items: bouquet + shipping (if delivery)
+        initialItems={invoiceItems}
 
         // Payment defaults from settings
         paymentBank={settings['default_payment_bank']}
@@ -194,6 +200,10 @@ export default function InvoicePage() {
 
         // Persist design changes back to order row
         onDesignChange={handleDesignChange}
+
+        // WhatsApp tab
+        orderForWhatsapp={order}
+        settingsForWhatsapp={settings}
       />
     </>
   )

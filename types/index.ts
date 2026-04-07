@@ -41,6 +41,10 @@ export interface Order {
   reference_image_url?: string
   handwritten_note?: string
   delivery_time?: string
+  delivery_type: 'pickup' | 'delivery'
+  shipping_origin?: 'barat' | 'tengah'
+  shipping_destination?: 'barat' | 'pusat' | 'selatan' | 'tengah' | 'timur'
+  shipping_cost: number
   created_at: string
   updated_at: string
 }

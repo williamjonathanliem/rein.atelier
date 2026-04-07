@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import type { InvoiceTemplate } from '@/types'
+import type { InvoiceTemplate, Order, Settings } from '@/types'
+import { WhatsappGenerator } from '@/components/whatsapp/WhatsappGenerator'
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
 
@@ -81,6 +82,8 @@ export interface InvoiceStudioProps {
     invoice_date_format: string
   }) => void
   onBack?: () => void
+  orderForWhatsapp?: Order
+  settingsForWhatsapp?: Settings
 }
 
 // ─── DESIGN TOKENS — matches the rein.atelier dashboard light theme ───────────
@@ -354,6 +357,7 @@ export function InvoiceStudio({
   initialTemplate = 'classic', initialColor = '#a78bfa',
   initialFont = 'Instrument Sans', initialDateFormat = 'MMM D, YYYY',
   initialPaid = false, onDesignChange, onBack,
+  orderForWhatsapp, settingsForWhatsapp,
 }: InvoiceStudioProps) {
 
   const today = todayStr()
@@ -374,7 +378,7 @@ export function InvoiceStudio({
     font: initialFont, dateFmt: initialDateFormat, paid: initialPaid,
   })
 
-  const [activeTab, setActiveTab] = useState<'details' | 'items' | 'design'>('details')
+  const [activeTab, setActiveTab] = useState<'details' | 'items' | 'design' | 'whatsapp'>('details')
   const [pdfLoading, setPdfLoading] = useState(false)
   const [toast, setToast] = useState<{ text: string; ok: boolean } | null>(null)
   const invoiceDocRef = useRef<HTMLDivElement>(null)
@@ -473,7 +477,7 @@ export function InvoiceStudio({
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 2, background: T.bg, borderRadius: 10, padding: 3, border: `1px solid ${T.border}` }}>
-          {(['details', 'items', 'design'] as const).map(tab => (
+          {(['details', 'items', 'design', 'whatsapp'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} style={{
               fontSize: 13, fontWeight: 500, border: 'none', borderRadius: 8, padding: '5px 18px',
               cursor: 'pointer', transition: 'all 0.15s', fontFamily: 'inherit',
@@ -481,7 +485,7 @@ export function InvoiceStudio({
               color: activeTab === tab ? T.text : T.textMuted,
               boxShadow: activeTab === tab ? '0 1px 3px rgba(167,139,250,0.12)' : 'none',
             }}>
-              {tab === 'details' ? 'Details' : tab === 'items' ? 'Items' : 'Design'}
+              {tab === 'details' ? 'Details' : tab === 'items' ? 'Items' : tab === 'design' ? 'Design' : '💬 WhatsApp'}
             </button>
           ))}
         </div>
@@ -673,6 +677,16 @@ export function InvoiceStudio({
                   ))}
                 </div>
               </Section>
+            </div>
+          )}
+
+          {/* WHATSAPP */}
+          {activeTab === 'whatsapp' && (
+            <div style={{ padding: '24px 20px' }}>
+              {orderForWhatsapp && settingsForWhatsapp
+                ? <WhatsappGenerator order={orderForWhatsapp} settings={settingsForWhatsapp} />
+                : <p style={{ color: T.textMuted, fontSize: 13 }}>WhatsApp data not available.</p>
+              }
             </div>
           )}
         </div>
