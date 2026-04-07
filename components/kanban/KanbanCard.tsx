@@ -1,11 +1,11 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { MoreHorizontal, FileText, Edit, Calendar } from 'lucide-react'
+import { MoreHorizontal, FileText, Edit, Calendar, MessageCircle } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { PriorityBadge } from '@/components/orders/PriorityBadge'
 import { Button } from '@/components/ui/button'
@@ -15,26 +15,17 @@ import type { Order } from '@/types'
 interface KanbanCardProps {
   order: Order
   onEdit: (order: Order) => void
+  onWhatsapp?: (order: Order) => void
 }
 
-export function KanbanCard({ order, onEdit }: KanbanCardProps) {
+export function KanbanCard({ order, onEdit, onWhatsapp }: KanbanCardProps) {
   const router = useRouter()
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: order.id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: order.id })
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
-
+  const style = { transform: CSS.Transform.toString(transform), transition }
   const overdue = isOverdue(order.deadline)
   const soon = !overdue && isDueSoon(order.deadline)
+  const total = order.price + (order.shipping_cost ?? 0)
 
   return (
     <div
@@ -53,12 +44,7 @@ export function KanbanCard({ order, onEdit }: KanbanCardProps) {
         <span className="font-mono text-xs text-gray-400">{order.order_number}</span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 -mt-0.5"
-              onClick={e => e.stopPropagation()}
-            >
+            <Button variant="ghost" size="icon" className="h-6 w-6 -mt-0.5" onClick={e => e.stopPropagation()}>
               <MoreHorizontal className="h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>
@@ -69,11 +55,19 @@ export function KanbanCard({ order, onEdit }: KanbanCardProps) {
             <DropdownMenuItem onClick={() => router.push(`/invoice/${order.id}`)}>
               <FileText className="h-3.5 w-3.5" /> Invoice
             </DropdownMenuItem>
+            {onWhatsapp && (
+              <DropdownMenuItem onClick={() => onWhatsapp(order)}>
+                <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
       <p className="font-semibold text-gray-900 text-sm mb-0.5">{order.client_name}</p>
+      {order.product_type && (
+        <p className="text-xs text-violet-600 font-medium mb-0.5">{order.product_type}</p>
+      )}
       {order.description && (
         <p className="text-xs text-gray-500 line-clamp-2 mb-2">{order.description}</p>
       )}
@@ -81,15 +75,12 @@ export function KanbanCard({ order, onEdit }: KanbanCardProps) {
       <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
         <div className="flex items-center gap-1.5">
           <PriorityBadge priority={order.priority} />
-          <div className={cn(
-            'flex items-center gap-1 text-xs',
-            overdue ? 'text-red-500' : soon ? 'text-amber-500' : 'text-gray-400'
-          )}>
+          <div className={cn('flex items-center gap-1 text-xs', overdue ? 'text-red-500' : soon ? 'text-amber-500' : 'text-gray-400')}>
             <Calendar className="h-3 w-3" />
             {formatDate(order.deadline, 'dd MMM')}
           </div>
         </div>
-        <span className="text-xs font-semibold text-gray-700">{formatIDR(order.price)}</span>
+        <span className="text-xs font-semibold text-gray-700">{formatIDR(total)}</span>
       </div>
     </div>
   )

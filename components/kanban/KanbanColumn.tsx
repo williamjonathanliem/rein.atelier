@@ -13,15 +13,8 @@ interface KanbanColumnProps {
   status: OrderStatus
   orders: Order[]
   onEdit: (order: Order) => void
+  onWhatsapp?: (order: Order) => void
   onAdd?: () => void
-}
-
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: 'Pending',
-  in_progress: 'In Progress',
-  revision: 'Revision',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
 }
 
 const COLUMN_ACCENT: Record<OrderStatus, string> = {
@@ -32,9 +25,9 @@ const COLUMN_ACCENT: Record<OrderStatus, string> = {
   cancelled: 'border-t-gray-300',
 }
 
-export function KanbanColumn({ status, orders, onEdit, onAdd }: KanbanColumnProps) {
+export function KanbanColumn({ status, orders, onEdit, onWhatsapp, onAdd }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status })
-  const total = orders.reduce((sum, o) => sum + (o.price ?? 0), 0)
+  const total = orders.reduce((sum, o) => sum + (o.price ?? 0) + (o.shipping_cost ?? 0), 0)
 
   return (
     <div
@@ -45,27 +38,22 @@ export function KanbanColumn({ status, orders, onEdit, onAdd }: KanbanColumnProp
         isOver && 'bg-violet-50/50 border-violet-200'
       )}
     >
-      {/* Column header */}
       <div className="px-4 pt-4 pb-3 border-b border-gray-100">
         <div className="flex items-center gap-2 mb-1">
           <StatusBadge status={status} />
-          <span className="text-xs text-gray-500">
-            {orders.length} orders
-          </span>
+          <span className="text-xs text-gray-500">{orders.length} orders</span>
         </div>
         <p className="text-xs text-gray-400">{formatIDR(total)}</p>
       </div>
 
-      {/* Cards */}
       <div className="flex-1 p-3 flex flex-col gap-2 overflow-y-auto">
         <SortableContext items={orders.map(o => o.id)} strategy={verticalListSortingStrategy}>
           {orders.map(order => (
-            <KanbanCard key={order.id} order={order} onEdit={onEdit} />
+            <KanbanCard key={order.id} order={order} onEdit={onEdit} onWhatsapp={onWhatsapp} />
           ))}
         </SortableContext>
       </div>
 
-      {/* Add button for Pending column */}
       {status === 'pending' && onAdd && (
         <div className="p-3 border-t border-gray-100">
           <Button

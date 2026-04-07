@@ -2,15 +2,9 @@
 
 import { useState } from 'react'
 import {
-  DndContext,
-  DragEndEvent,
-  DragOverEvent,
-  DragStartEvent,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  closestCorners,
-  DragOverlay,
+  DndContext, DragEndEvent, DragStartEvent,
+  PointerSensor, useSensor, useSensors,
+  closestCorners, DragOverlay,
 } from '@dnd-kit/core'
 import { KanbanColumn } from './KanbanColumn'
 import { KanbanCard } from './KanbanCard'
@@ -20,21 +14,21 @@ import type { Order, OrderStatus } from '@/types'
 
 const COLUMNS: OrderStatus[] = ['pending', 'in_progress', 'revision', 'completed', 'cancelled']
 
-export function KanbanBoard() {
+interface KanbanBoardProps {
+  onWhatsapp?: (order: Order) => void
+}
+
+export function KanbanBoard({ onWhatsapp }: KanbanBoardProps) {
   const { orders, updateStatus } = useOrdersContext()
   const [addOpen, setAddOpen] = useState(false)
   const [editOrder, setEditOrder] = useState<Order | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 },
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   )
 
-  const ordersByStatus = (status: OrderStatus) =>
-    orders.filter(o => o.status === status)
-
+  const ordersByStatus = (status: OrderStatus) => orders.filter(o => o.status === status)
   const activeOrder = activeId ? orders.find(o => o.id === activeId) : null
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -45,12 +39,9 @@ export function KanbanBoard() {
     const { active, over } = event
     setActiveId(null)
     if (!over) return
-
     const orderId = String(active.id)
-    // over.id can be either a column status or another order id
     const targetColumn = COLUMNS.find(c => c === over.id)
       ?? orders.find(o => o.id === over.id)?.status
-
     if (targetColumn) {
       const order = orders.find(o => o.id === orderId)
       if (order && order.status !== targetColumn) {
@@ -74,6 +65,7 @@ export function KanbanBoard() {
               status={status}
               orders={ordersByStatus(status)}
               onEdit={order => { setEditOrder(order); setAddOpen(true) }}
+              onWhatsapp={onWhatsapp}
               onAdd={status === 'pending' ? () => { setEditOrder(null); setAddOpen(true) } : undefined}
             />
           ))}

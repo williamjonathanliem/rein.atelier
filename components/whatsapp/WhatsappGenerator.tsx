@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { formatIDR, formatDate } from '@/lib/utils'
+import { AREA_LABELS } from '@/lib/shippingRates'
 import { useOrdersContext } from '@/contexts/OrdersContext'
 import type { Order, Settings } from '@/types'
 
@@ -26,8 +27,14 @@ function generateMessage(order: Order, settings: Settings, lang: 'id' | 'en'): s
   const bank = settings.default_payment_bank || ''
   const acName = settings.default_payment_account_name || ''
   const acNum = settings.default_payment_account_number || ''
-  const remaining = order.price - (order.deposit_amount ?? 0)
+  const isDelivery = order.delivery_type === 'delivery'
+  const shippingCost = order.shipping_cost ?? 0
+  const total = order.price + shippingCost
+  const remaining = total - (order.deposit_paid ? (order.deposit_amount ?? 0) : 0)
   const hasPayment = bank || acName || acNum
+
+  const originLabel = order.shipping_origin ? AREA_LABELS[order.shipping_origin] ?? order.shipping_origin : ''
+  const destLabel = order.shipping_destination ? AREA_LABELS[order.shipping_destination] ?? order.shipping_destination : ''
 
   if (lang === 'id') {
     return `Halo ${order.client_name}! 👋
@@ -38,13 +45,18 @@ Berikut detail pesanan kamu:
 
 📋 *No. Pesanan:* ${order.order_number}
 📦 *Pesanan:* ${order.description || '—'}
-💰 *Total:* ${formatIDR(order.price)}
+💰 *Harga Buket:* ${formatIDR(order.price)}
+${isDelivery
+  ? `🚗 *Ongkir (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
+💳 *Total:* ${formatIDR(total)}`
+  : `🛍️ *Pengambilan:* Ambil sendiri di Surabaya Barat
+💳 *Total:* ${formatIDR(total)}`}
 📅 *Deadline:* ${formatDate(order.deadline)}
 
 ${order.deposit_paid
   ? `✅ *DP sudah diterima:* ${formatIDR(order.deposit_amount)}
 💳 *Sisa pembayaran:* ${formatIDR(remaining)}`
-  : `💳 *Pembayaran:* ${formatIDR(order.price)} (belum ada DP)`}
+  : `💳 *Pembayaran:* ${formatIDR(total)} (belum ada DP)`}
 ${hasPayment ? `
 Pembayaran bisa ditransfer ke:
 🏦 *Bank:* ${bank}
@@ -64,13 +76,18 @@ Here are your order details:
 
 📋 *Order No:* ${order.order_number}
 📦 *Order:* ${order.description || '—'}
-💰 *Total:* ${formatIDR(order.price)}
+💰 *Bouquet Price:* ${formatIDR(order.price)}
+${isDelivery
+  ? `🚗 *Shipping (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
+💳 *Total:* ${formatIDR(total)}`
+  : `🛍️ *Pickup:* Self-pickup at Surabaya Barat
+💳 *Total:* ${formatIDR(total)}`}
 📅 *Deadline:* ${formatDate(order.deadline)}
 
 ${order.deposit_paid
   ? `✅ *Deposit received:* ${formatIDR(order.deposit_amount)}
 💳 *Remaining payment:* ${formatIDR(remaining)}`
-  : `💳 *Payment:* ${formatIDR(order.price)} (no deposit yet)`}
+  : `💳 *Payment:* ${formatIDR(total)} (no deposit yet)`}
 ${hasPayment ? `
 Payment can be transferred to:
 🏦 *Bank:* ${bank}
@@ -158,11 +175,7 @@ export function WhatsappGenerator({ order, settings }: WhatsappGeneratorProps) {
           Open WhatsApp
         </Button>
         <div className="ml-auto flex items-center gap-2">
-          <Switch
-            id="wa-sent"
-            checked={sent}
-            onCheckedChange={handleMarkSent}
-          />
+          <Switch id="wa-sent" checked={sent} onCheckedChange={handleMarkSent} />
           <Label htmlFor="wa-sent" className="cursor-pointer normal-case text-sm font-medium text-gray-700">
             {sent
               ? <span className="text-emerald-600">✓ WhatsApp Sent</span>
