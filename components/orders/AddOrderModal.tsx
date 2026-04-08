@@ -397,7 +397,7 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
 
                 {/* Pengiriman */}
                 <div>
-                  <Label className="mb-2 block">Pengiriman</Label>
+                  <Label className="mb-2 block">Delivery</Label>
                   <div className="flex rounded-xl overflow-hidden border border-gray-200 mb-3">
                     <button
                       type="button"
@@ -413,7 +413,7 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
                         set('shipping_destination', '')
                       }}
                     >
-                      🛍️ Ambil Sendiri
+                      🛍️ Self Pickup
                     </button>
                     <button
                       type="button"
@@ -425,34 +425,34 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
                       )}
                       onClick={() => set('delivery_type', 'delivery')}
                     >
-                      🚗 Diantar (Ongkir)
+                      🚗 Delivery (Ongkir)
                     </button>
                   </div>
 
                   {form.delivery_type === 'pickup' && (
-                    <p className="text-xs text-gray-400">📍 Pengambilan di Surabaya Barat</p>
+                    <p className="text-xs text-gray-400">📍 Self Pickup in West Surabaya</p>
                   )}
 
                   {form.delivery_type === 'delivery' && (
                     <div className="flex flex-col gap-2">
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <Label className="mb-1 block text-xs">Asal</Label>
+                          <Label className="mb-1 block text-xs">Origin</Label>
                           <Select
                             value={form.shipping_origin}
                             onValueChange={v => {
                               setForm(prev => ({ ...prev, shipping_origin: v as 'barat' | 'tengah', shipping_destination: '' }))
                             }}
                           >
-                            <SelectTrigger className="text-xs"><SelectValue placeholder="Pilih asal..." /></SelectTrigger>
+                            <SelectTrigger className="text-xs"><SelectValue placeholder="Select origin..." /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="barat">Surabaya Barat</SelectItem>
-                              <SelectItem value="tengah">Surabaya Tengah</SelectItem>
+                              <SelectItem value="barat">West Surabaya</SelectItem>
+                              <SelectItem value="tengah">Central Surabaya</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div>
-                          <Label className="mb-1 block text-xs">Tujuan</Label>
+                          <Label className="mb-1 block text-xs">Destination</Label>
                           <Select
                             value={form.shipping_destination}
                             onValueChange={v => set('shipping_destination', v as typeof form.shipping_destination)}
@@ -469,10 +469,10 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
                       </div>
                       {form.shipping_destination ? (
                         <div className="bg-violet-50 text-violet-700 rounded-lg px-3 py-2 text-sm font-semibold">
-                          🚗 Ongkir: {formatIDR(shippingCost)}
+                          🚗 Shipping Cost: {formatIDR(shippingCost)}
                         </div>
                       ) : (
-                        <p className="text-xs text-gray-400">Pilih tujuan untuk melihat ongkir</p>
+                        <p className="text-xs text-gray-400">Select destination to see shipping cost</p>
                       )}
                     </div>
                   )}
@@ -481,12 +481,12 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
                 {/* Order summary */}
                 <div className="bg-gray-50 rounded-xl border border-gray-100 px-4 py-3 text-sm">
                   <div className="flex justify-between text-gray-600 mb-1">
-                    <span>Harga Buket</span>
+                    <span>Bouquet Price</span>
                     <span>{formatIDR(bouquetPrice)}</span>
                   </div>
                   {form.delivery_type === 'delivery' && (
                     <div className="flex justify-between text-gray-600 mb-1">
-                      <span>Ongkir</span>
+                      <span>Shipping Cost</span>
                       <span>{formatIDR(shippingCost)}</span>
                     </div>
                   )}

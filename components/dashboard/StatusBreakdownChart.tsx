@@ -44,10 +44,10 @@ export function StatusBreakdownChart({ data, totalOrders }: StatusBreakdownChart
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-      <p className="text-sm font-semibold text-gray-700 mb-4">No orders yet..</p>
+      <p className="text-sm font-semibold text-gray-700 mb-4">Orders Chart</p>
       {data.length === 0 ? (
         <div className="h-[200px] flex items-center justify-center text-gray-400 text-sm">
-          No orders yet..
+          Orders Chart
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={200}>

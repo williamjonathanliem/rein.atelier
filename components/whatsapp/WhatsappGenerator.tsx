@@ -47,9 +47,9 @@ Berikut detail pesanan:
 📦 *Pesanan:* ${order.product_type || order.description || '—'}
 💰 *Harga Buket:* ${formatIDR(order.price)}
 ${isDelivery
-  ? `🚗 *Ongkir (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
+        ? `🚗 *Ongkir (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
 💳 *Total:* ${formatIDR(total)}`
-  : `🛍️ *Pengambilan:* Ambil sendiri
+        : `🛍️ *Pengambilan:* Ambil sendiri
 💳 *Total:* ${formatIDR(total)}`}
 📅 *Tanggal Pengiriman:* ${formatDate(order.deadline)}
 ${order.delivery_time ? `⏰ *Jam Pengiriman:* ${order.delivery_time}` : ''}
@@ -73,19 +73,24 @@ Here are your order details:
 📦 *Order:* ${order.product_type || order.description || '—'}
 💰 *Bouquet Price:* ${formatIDR(order.price)}
 ${isDelivery
-  ? `🚗 *Shipping (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
+        ? `🚗 *Shipping (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
 💳 *Total:* ${formatIDR(total)}`
-  : `🛍️ *Pickup:* Self-pickup
+        : `🛍️ *Pickup:* Self-pickup at Surabaya Barat
 💳 *Total:* ${formatIDR(total)}`}
-📅 *Delivery Date:* ${formatDate(order.deadline)}
-${order.delivery_time ? `⏰ *Delivery Time:* ${order.delivery_time}` : ''}
-💳 *Payment:* A 50% deposit can be transferred to account ${acNum} (${bank}) under ${acName}. Full payment is due the day before delivery.
+📅 *Deadline:* ${formatDate(order.deadline)}
 
-Payment proof can be sent in this chat 😊
-Your order will be processed once the deposit is received.
-
-If you have any questions, feel free to chat!😊
-Thank you 💐
+${order.deposit_paid
+        ? `✅ *Deposit received:* ${formatIDR(order.deposit_amount)}
+💳 *Remaining payment:* ${formatIDR(remaining)}`
+        : `💳 *Payment:* ${formatIDR(total)} (no deposit yet)`}
+${hasPayment ? `
+Payment can be transferred to:
+🏦 *Bank:* ${bank}
+👤 *Account name:* ${acName}
+💳 *Account number:* ${acNum}
+Reference: ${order.order_number}
+` : ''}
+If you have any questions, feel free to chat! Thank you 💐
 
 _${bizName}_`
   }
