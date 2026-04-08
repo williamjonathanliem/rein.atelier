@@ -47,9 +47,9 @@ Berikut detail pesanan:
 📦 *Pesanan:* ${order.product_type || order.description || '—'}
 💰 *Harga Buket:* ${formatIDR(order.price)}
 ${isDelivery
-  ? `🚗 *Ongkir (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
+        ? `🚗 *Ongkir (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
 💳 *Total:* ${formatIDR(total)}`
-  : `🛍️ *Pengambilan:* Ambil sendiri
+        : `🛍️ *Pengambilan:* Ambil sendiri
 💳 *Total:* ${formatIDR(total)}`}
 📅 *Tanggal Pengiriman:* ${formatDate(order.deadline)}
 ${order.delivery_time ? `⏰ *Jam Pengiriman:* ${order.delivery_time}` : ''}
@@ -70,19 +70,19 @@ Thank you for ordering from ${bizName} 🌸
 Here are your order details:
 
 📋 *Order No:* ${order.order_number}
-📦 *Order:* ${order.description || '—'}
+📦 *Order:* ${order.product_type || order.description || '—'}
 💰 *Bouquet Price:* ${formatIDR(order.price)}
 ${isDelivery
-  ? `🚗 *Shipping (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
+        ? `🚗 *Shipping (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
 💳 *Total:* ${formatIDR(total)}`
-  : `🛍️ *Pickup:* Self-pickup at Surabaya Barat
+        : `🛍️ *Pickup:* Self-pickup at Surabaya Barat
 💳 *Total:* ${formatIDR(total)}`}
 📅 *Deadline:* ${formatDate(order.deadline)}
 
 ${order.deposit_paid
-  ? `✅ *Deposit received:* ${formatIDR(order.deposit_amount)}
+        ? `✅ *Deposit received:* ${formatIDR(order.deposit_amount)}
 💳 *Remaining payment:* ${formatIDR(remaining)}`
-  : `💳 *Payment:* ${formatIDR(total)} (no deposit yet)`}
+        : `💳 *Payment:* ${formatIDR(total)} (no deposit yet)`}
 ${hasPayment ? `
 Payment can be transferred to:
 🏦 *Bank:* ${bank}
