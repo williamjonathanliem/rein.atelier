@@ -41,30 +41,25 @@ function generateMessage(order: Order, settings: Settings, lang: 'id' | 'en'): s
 
 Terima kasih sudah memesan di ${bizName} 🌸
 
-Berikut detail pesanan kamu:
+Berikut detail pesanan:
 
 📋 *No. Pesanan:* ${order.order_number}
-📦 *Pesanan:* ${order.description || '—'}
+📦 *Pesanan:* ${order.product_type || order.description || '—'}
 💰 *Harga Buket:* ${formatIDR(order.price)}
 ${isDelivery
   ? `🚗 *Ongkir (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
 💳 *Total:* ${formatIDR(total)}`
-  : `🛍️ *Pengambilan:* Ambil sendiri di Surabaya Barat
+  : `🛍️ *Pengambilan:* Ambil sendiri
 💳 *Total:* ${formatIDR(total)}`}
-📅 *Deadline:* ${formatDate(order.deadline)}
+📅 *Tanggal Pengiriman:* ${formatDate(order.deadline)}
+${order.delivery_time ? `⏰ *Jam Pengiriman:* ${order.delivery_time}` : ''}
+💳 *Pembayaran:* DP 50% bisa ditransfer ke rekening ${acNum} (${bank}) an ${acName}. Untuk pelunasan, dapat dilakukan H-1 sebelum pengiriman.
 
-${order.deposit_paid
-  ? `✅ *DP sudah diterima:* ${formatIDR(order.deposit_amount)}
-💳 *Sisa pembayaran:* ${formatIDR(remaining)}`
-  : `💳 *Pembayaran:* ${formatIDR(total)} (belum ada DP)`}
-${hasPayment ? `
-Pembayaran bisa ditransfer ke:
-🏦 *Bank:* ${bank}
-👤 *Atas nama:* ${acName}
-💳 *No. Rekening:* ${acNum}
-Berita: ${order.order_number}
-` : ''}
-Kalau ada pertanyaan, langsung chat ya! Terima kasih 💐
+Bukti pembayaran bisa dikirim di chat ini ya 😊
+Pesanan akan mulai diproses setelah DP diterima.
+
+Jika ada pertanyaan, boleh langsung chat ya!😊
+Terima kasih 💐
 
 _${bizName}_`
   } else {
