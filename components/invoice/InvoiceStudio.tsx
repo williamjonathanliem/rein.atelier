@@ -32,6 +32,7 @@ interface InvoiceState {
   clRef: string
   items: InvoiceItem[]
   discountPct: number
+  discountAmt: number
   taxName: string
   taxPct: number
   payBank: string
@@ -75,6 +76,8 @@ export interface InvoiceStudioProps {
   initialFont?: string
   initialDateFormat?: string
   initialPaid?: boolean
+  initialDiscountAmt?: number
+  initialDiscountLabel?: string
   onDesignChange?: (design: {
     invoice_template: InvoiceTemplate
     invoice_color: string
@@ -268,7 +271,7 @@ function renderInvoiceDoc(s: InvoiceState, el: HTMLElement): void {
   const { invoiceNumber: num, currency, issueDate, dueDate,
     bizName, bizEmail, bizPhone, bizAddr, bizTaxName, bizTaxNum, logoDataUrl,
     clName, clEmail, clPhone, clAddr, clRef,
-    items, discountPct: disc, taxName, taxPct,
+    items, discountPct: disc, discountAmt, taxName, taxPct,
     payBank, payAcName, payAcNum, payRef, notes, terms,
     template, color, font, dateFmt, paid } = s
 
@@ -276,7 +279,8 @@ function renderInvoiceDoc(s: InvoiceState, el: HTMLElement): void {
   const fm = (n: number) => fmtMoney(n, currency)
 
   const subtotal = items.reduce((a, it) => a + it.qty * it.price, 0)
-  const discAmt = subtotal * disc / 100, after = subtotal - discAmt
+  const resolvedDiscAmt = discountAmt > 0 ? discountAmt : subtotal * disc / 100
+  const after = subtotal - resolvedDiscAmt
   const taxAmt = after * taxPct / 100, total = after + taxAmt
 
   const logoHtml = logoDataUrl ? `<img class="doc-logo-img" src="${logoDataUrl}" alt="logo">` : `<div class="doc-logo-text">${esc(bizName)}</div>`
@@ -294,7 +298,8 @@ function renderInvoiceDoc(s: InvoiceState, el: HTMLElement): void {
   }).join('')
 
   let totHtml = `<div class="tot-row"><span class="tot-l">Subtotal</span><span class="tot-r">${fm(subtotal)}</span></div>`
-  if (disc > 0) totHtml += `<div class="tot-row disc"><span class="tot-l">Discount (${disc}%)</span><span class="tot-r">− ${fm(discAmt)}</span></div>`
+  if (discountAmt > 0) totHtml += `<div class="tot-row disc"><span class="tot-l">Diskon</span><span class="tot-r">− ${fm(discountAmt)}</span></div>`
+  else if (disc > 0) totHtml += `<div class="tot-row disc"><span class="tot-l">Discount (${disc}%)</span><span class="tot-r">− ${fm(resolvedDiscAmt)}</span></div>`
   if (taxPct > 0) totHtml += `<div class="tot-row"><span class="tot-l">${esc(taxName)} (${taxPct}%)</span><span class="tot-r">${fm(taxAmt)}</span></div>`
   totHtml += `<div class="tot-divider"></div><div class="tot-row grand"><span class="tot-l">Total Due</span><span class="tot-r">${fm(total)}</span></div>`
 
@@ -356,7 +361,8 @@ export function InvoiceStudio({
   defaultTerms = 'Payment is due within 14 days of receiving this invoice.',
   initialTemplate = 'classic', initialColor = '#a78bfa',
   initialFont = 'Instrument Sans', initialDateFormat = 'MMM D, YYYY',
-  initialPaid = false, onDesignChange, onBack,
+  initialPaid = false, initialDiscountAmt = 0,
+  onDesignChange, onBack,
   orderForWhatsapp, settingsForWhatsapp,
 }: InvoiceStudioProps) {
 
@@ -370,7 +376,7 @@ export function InvoiceStudio({
     clName: clientName, clEmail: clientEmail, clPhone: clientPhone,
     clAddr: clientAddress, clRef: clientRef,
     items: initialItems ?? [{ desc: '', sub: '', qty: 1, price: 0 }],
-    discountPct: 0, taxName: 'PPN', taxPct: 0,
+    discountPct: 0, discountAmt: initialDiscountAmt, taxName: 'PPN', taxPct: 0,
     payBank: paymentBank, payAcName: paymentAccountName,
     payAcNum: paymentAccountNumber, payRef: invoiceNumber,
     notes: defaultNotes, terms: defaultTerms,

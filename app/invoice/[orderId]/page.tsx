@@ -130,7 +130,7 @@ export default function InvoicePage() {
     ? order.price * (order.discount_amount ?? 0) / 100
     : (order.discount_amount ?? 0)
 
-  // Build invoice line items — bouquet + optional discount + optional shipping
+  // Build invoice line items — bouquet + optional shipping (discount handled in totals section)
   const invoiceItems = [
     {
       desc: order.description ?? '',
@@ -138,15 +138,6 @@ export default function InvoicePage() {
       qty: 1,
       price: order.price,
     },
-    ...(discountValue > 0
-      ? [{
-          desc: 'Diskon',
-          sub: order.discount_type === 'percent' ? `${order.discount_amount}%` : '',
-          qty: 1,
-          price: -discountValue,
-        }]
-      : []
-    ),
     ...(order.delivery_type === 'delivery' && (order.shipping_cost ?? 0) > 0
       ? [{
           desc: 'Ongkos Kirim',
@@ -191,8 +182,9 @@ export default function InvoicePage() {
         issueDate={todayStr()}
         dueDate={order.deadline}
 
-        // Line items: bouquet + shipping (if delivery)
+        // Line items: bouquet + shipping (discount shown in totals section)
         initialItems={invoiceItems}
+        initialDiscountAmt={discountValue}
 
         // Payment defaults from settings
         paymentBank={settings['default_payment_bank']}
