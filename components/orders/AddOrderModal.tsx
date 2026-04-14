@@ -128,7 +128,14 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
         shipping_origin: (editOrder.shipping_origin as '' | 'barat' | 'tengah') ?? '',
         shipping_destination: (editOrder.shipping_destination as '' | 'barat' | 'pusat' | 'selatan' | 'tengah' | 'timur') ?? '',
         discount_type: (editOrder.discount_type as 'fixed' | 'percent') ?? 'fixed',
-        discount_amount: editOrder.discount_amount ? String(editOrder.discount_amount) : '',
+        discount_amount: (() => {
+          const raw = editOrder.discount_amount ?? 0
+          // Guard against old bug: percent was saved as computed amount (>100 is impossible as a %)
+          if ((editOrder.discount_type as string) === 'percent' && raw > 100 && editOrder.price > 0) {
+            return String(Math.round(raw / editOrder.price * 100))
+          }
+          return raw ? String(raw) : ''
+        })(),
       })
       setRefImagePreview(editOrder.reference_image_url ?? null)
     } else {
