@@ -248,7 +248,7 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
       shipping_destination: isDelivery ? (form.shipping_destination || undefined) : undefined,
       shipping_cost: shippingCost,
       discount_type: form.discount_type,
-      discount_amount: discountValue,
+      discount_amount: parseFloat(form.discount_amount) || 0,
     }
 
     if (editOrder) {
