@@ -42,7 +42,7 @@ function generateMessage(order: Order, settings: Settings, lang: 'id' | 'en'): s
   if (lang === 'id') {
     return `Halo ${order.client_name}! 👋
 
-Terima kasih sudah memesan di ${bizName} 🌸
+Thank you for ordering from ${bizName}! 🌸
 
 Berikut detail pesanan:
 
@@ -78,9 +78,9 @@ Here are your order details:
 💰 *Bouquet Price:* ${formatIDR(order.price)}
 ${discountValue > 0 ? `🏷️ *Discount:* − ${formatIDR(discountValue)}` : ''}
 ${isDelivery
-  ? `🚗 *Shipping (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
+        ? `🚗 *Shipping (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
 💳 *Total:* ${formatIDR(total)}`
-  : `🛍️ *Pickup:* Self-pickup
+        : `🛍️ *Pickup:* Self-pickup
 💳 *Total:* ${formatIDR(total)}`}
 📅 *Delivery Date:* ${formatDate(order.deadline)}
 ${order.delivery_time ? `⏰ *Delivery Time:* ${order.delivery_time}` : ''}
