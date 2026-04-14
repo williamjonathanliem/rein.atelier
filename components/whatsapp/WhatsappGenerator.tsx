@@ -78,24 +78,19 @@ Here are your order details:
 💰 *Bouquet Price:* ${formatIDR(order.price)}
 ${discountValue > 0 ? `🏷️ *Discount:* − ${formatIDR(discountValue)}` : ''}
 ${isDelivery
-        ? `🚗 *Shipping (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
+  ? `🚗 *Shipping (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
 💳 *Total:* ${formatIDR(total)}`
-        : `🛍️ *Pickup:* Self-pickup at Surabaya Barat
+  : `🛍️ *Pickup:* Self-pickup
 💳 *Total:* ${formatIDR(total)}`}
-📅 *Deadline:* ${formatDate(order.deadline)}
+📅 *Delivery Date:* ${formatDate(order.deadline)}
+${order.delivery_time ? `⏰ *Delivery Time:* ${order.delivery_time}` : ''}
+💳 *Payment:* A 50% deposit can be transferred to account ${acNum} (${bank}) under ${acName}. Full payment is due the day before delivery.
 
-${order.deposit_paid
-        ? `✅ *Deposit received:* ${formatIDR(order.deposit_amount)}
-💳 *Remaining payment:* ${formatIDR(remaining)}`
-        : `💳 *Payment:* ${formatIDR(total)} (no deposit yet)`}
-${hasPayment ? `
-Payment can be transferred to:
-🏦 *Bank:* ${bank}
-👤 *Account name:* ${acName}
-💳 *Account number:* ${acNum}
-Reference: ${order.order_number}
-` : ''}
-If you have any questions, feel free to chat! Thank you 💐
+Payment proof can be sent in this chat 😊
+Your order will be processed once the deposit is received.
+
+If you have any questions, feel free to chat!😊
+Thank you 💐
 
 _${bizName}_`
   }
