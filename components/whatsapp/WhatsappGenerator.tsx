@@ -29,7 +29,10 @@ function generateMessage(order: Order, settings: Settings, lang: 'id' | 'en'): s
   const acNum = settings.default_payment_account_number || ''
   const isDelivery = order.delivery_type === 'delivery'
   const shippingCost = order.shipping_cost ?? 0
-  const total = order.price + shippingCost
+  const discountValue = order.discount_type === 'percent'
+    ? order.price * (order.discount_amount ?? 0) / 100
+    : (order.discount_amount ?? 0)
+  const total = order.price - discountValue + shippingCost
   const remaining = total - (order.deposit_paid ? (order.deposit_amount ?? 0) : 0)
   const hasPayment = bank || acName || acNum
 
@@ -46,6 +49,7 @@ Berikut detail pesanan:
 📋 *No. Pesanan:* ${order.order_number}
 📦 *Pesanan:* ${order.product_type || order.description || '—'}
 💰 *Harga Buket:* ${formatIDR(order.price)}
+${discountValue > 0 ? `🏷️ *Diskon:* − ${formatIDR(discountValue)}` : ''}
 ${isDelivery
         ? `🚗 *Ongkir (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
 💳 *Total:* ${formatIDR(total)}`
@@ -72,25 +76,21 @@ Here are your order details:
 📋 *Order No:* ${order.order_number}
 📦 *Order:* ${order.product_type || order.description || '—'}
 💰 *Bouquet Price:* ${formatIDR(order.price)}
+${discountValue > 0 ? `🏷️ *Discount:* − ${formatIDR(discountValue)}` : ''}
 ${isDelivery
-        ? `🚗 *Shipping (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
+  ? `🚗 *Shipping (${originLabel} → ${destLabel}):* ${formatIDR(shippingCost)}
 💳 *Total:* ${formatIDR(total)}`
-        : `🛍️ *Pickup:* Self-pickup at Surabaya Barat
+  : `🛍️ *Pickup:* Self-pickup
 💳 *Total:* ${formatIDR(total)}`}
-📅 *Deadline:* ${formatDate(order.deadline)}
+📅 *Delivery Date:* ${formatDate(order.deadline)}
+${order.delivery_time ? `⏰ *Delivery Time:* ${order.delivery_time}` : ''}
+💳 *Payment:* A 50% deposit can be transferred to account ${acNum} (${bank}) under ${acName}. Full payment is due the day before delivery.
 
-${order.deposit_paid
-        ? `✅ *Deposit received:* ${formatIDR(order.deposit_amount)}
-💳 *Remaining payment:* ${formatIDR(remaining)}`
-        : `💳 *Payment:* ${formatIDR(total)} (no deposit yet)`}
-${hasPayment ? `
-Payment can be transferred to:
-🏦 *Bank:* ${bank}
-👤 *Account name:* ${acName}
-💳 *Account number:* ${acNum}
-Reference: ${order.order_number}
-` : ''}
-If you have any questions, feel free to chat! Thank you 💐
+Payment proof can be sent in this chat 😊
+Your order will be processed once the deposit is received.
+
+If you have any questions, feel free to chat!😊
+Thank you 💐
 
 _${bizName}_`
   }

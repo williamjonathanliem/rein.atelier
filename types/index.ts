@@ -45,6 +45,8 @@ export interface Order {
   shipping_origin?: 'barat' | 'tengah'
   shipping_destination?: 'barat' | 'pusat' | 'selatan' | 'tengah' | 'timur'
   shipping_cost: number
+  discount_type: 'fixed' | 'percent'
+  discount_amount: number
   created_at: string
   updated_at: string
 }

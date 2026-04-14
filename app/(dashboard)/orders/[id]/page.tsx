@@ -60,7 +60,11 @@ export default function OrderDetailPage() {
     )
   }
 
-  const remaining = order.price - (order.deposit_paid ? order.deposit_amount : 0)
+  const discountValue = order.discount_type === 'percent'
+    ? order.price * (order.discount_amount ?? 0) / 100
+    : (order.discount_amount ?? 0)
+  const total = order.price - discountValue + (order.shipping_cost ?? 0)
+  const remaining = total - (order.deposit_paid ? order.deposit_amount : 0)
 
   return (
     <div>
@@ -253,8 +257,26 @@ export default function OrderDetailPage() {
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Payment</p>
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Total Price</span>
-                  <span className="text-sm font-bold text-gray-900">{formatIDR(order.price)}</span>
+                  <span className="text-sm text-gray-500">Harga Buket</span>
+                  <span className="text-sm text-gray-700">{formatIDR(order.price)}</span>
+                </div>
+                {discountValue > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">
+                      Diskon{order.discount_type === 'percent' ? ` (${order.discount_amount}%)` : ''}
+                    </span>
+                    <span className="text-sm font-medium text-rose-500">− {formatIDR(discountValue)}</span>
+                  </div>
+                )}
+                {(order.shipping_cost ?? 0) > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-500">Ongkir</span>
+                    <span className="text-sm text-gray-700">{formatIDR(order.shipping_cost)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center pt-2 border-t border-gray-100 mt-1">
+                  <span className="text-sm font-semibold text-gray-700">Total</span>
+                  <span className="text-sm font-bold text-gray-900">{formatIDR(total)}</span>
                 </div>
                 {order.deposit_paid && order.deposit_amount > 0 && (
                   <>
