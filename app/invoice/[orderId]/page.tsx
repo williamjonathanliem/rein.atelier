@@ -125,7 +125,12 @@ export default function InvoicePage() {
     )
   }
 
-  // Build invoice line items — bouquet + optional shipping
+  // Compute discount value
+  const discountValue = order.discount_type === 'percent'
+    ? order.price * (order.discount_amount ?? 0) / 100
+    : (order.discount_amount ?? 0)
+
+  // Build invoice line items — bouquet + optional discount + optional shipping
   const invoiceItems = [
     {
       desc: order.description ?? '',
@@ -133,6 +138,15 @@ export default function InvoicePage() {
       qty: 1,
       price: order.price,
     },
+    ...(discountValue > 0
+      ? [{
+          desc: 'Diskon',
+          sub: order.discount_type === 'percent' ? `${order.discount_amount}%` : '',
+          qty: 1,
+          price: -discountValue,
+        }]
+      : []
+    ),
     ...(order.delivery_type === 'delivery' && (order.shipping_cost ?? 0) > 0
       ? [{
           desc: 'Ongkos Kirim',

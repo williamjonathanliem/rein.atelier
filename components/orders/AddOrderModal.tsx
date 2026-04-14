@@ -65,6 +65,8 @@ const defaultForm = {
   delivery_type: 'pickup' as 'pickup' | 'delivery',
   shipping_origin: '' as '' | 'barat' | 'tengah',
   shipping_destination: '' as '' | 'barat' | 'pusat' | 'selatan' | 'tengah' | 'timur',
+  discount_type: 'fixed' as 'fixed' | 'percent',
+  discount_amount: '',
 }
 
 export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalProps) {
@@ -87,6 +89,9 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
     form.shipping_destination || undefined,
   )
   const bouquetPrice = parseFloat(form.price) || 0
+  const discountValue = form.discount_type === 'percent'
+    ? bouquetPrice * (parseFloat(form.discount_amount) || 0) / 100
+    : (parseFloat(form.discount_amount) || 0)
   const destinationOptions = form.shipping_origin
     ? getDestinationOptions(form.shipping_origin as 'barat' | 'tengah')
     : []
@@ -122,6 +127,8 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
         delivery_type: (editOrder.delivery_type as 'pickup' | 'delivery') ?? 'pickup',
         shipping_origin: (editOrder.shipping_origin as '' | 'barat' | 'tengah') ?? '',
         shipping_destination: (editOrder.shipping_destination as '' | 'barat' | 'pusat' | 'selatan' | 'tengah' | 'timur') ?? '',
+        discount_type: (editOrder.discount_type as 'fixed' | 'percent') ?? 'fixed',
+        discount_amount: editOrder.discount_amount ? String(editOrder.discount_amount) : '',
       })
       setRefImagePreview(editOrder.reference_image_url ?? null)
     } else {
@@ -240,6 +247,8 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
       shipping_origin: isDelivery ? (form.shipping_origin || undefined) : undefined,
       shipping_destination: isDelivery ? (form.shipping_destination || undefined) : undefined,
       shipping_cost: shippingCost,
+      discount_type: form.discount_type,
+      discount_amount: discountValue,
     }
 
     if (editOrder) {
@@ -395,6 +404,33 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
                   </div>
                 )}
 
+                {/* Discount */}
+                <div>
+                  <Label className="mb-1.5 block">Discount <span className="text-gray-400 font-normal">(optional)</span></Label>
+                  <div className="flex gap-2">
+                    <Select value={form.discount_type} onValueChange={v => set('discount_type', v as 'fixed' | 'percent')}>
+                      <SelectTrigger className="w-28 flex-shrink-0"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fixed">Rp (Fixed)</SelectItem>
+                        <SelectItem value="percent">% Persen</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="number"
+                      value={form.discount_amount}
+                      onChange={e => set('discount_amount', e.target.value)}
+                      placeholder={form.discount_type === 'percent' ? '0' : '0'}
+                      min="0"
+                      max={form.discount_type === 'percent' ? '100' : undefined}
+                    />
+                  </div>
+                  {discountValue > 0 && (
+                    <p className="text-xs text-rose-500 mt-1 font-medium">
+                      Diskon: − {formatIDR(discountValue)}
+                    </p>
+                  )}
+                </div>
+
                 {/* Pengiriman */}
                 <div>
                   <Label className="mb-2 block">Delivery</Label>
@@ -484,6 +520,12 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
                     <span>Bouquet Price</span>
                     <span>{formatIDR(bouquetPrice)}</span>
                   </div>
+                  {discountValue > 0 && (
+                    <div className="flex justify-between text-rose-500 mb-1">
+                      <span>Diskon</span>
+                      <span>− {formatIDR(discountValue)}</span>
+                    </div>
+                  )}
                   {form.delivery_type === 'delivery' && (
                     <div className="flex justify-between text-gray-600 mb-1">
                       <span>Shipping Cost</span>
@@ -492,7 +534,7 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
                   )}
                   <div className="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-200 mt-1">
                     <span>Total</span>
-                    <span>{formatIDR(bouquetPrice + shippingCost)}</span>
+                    <span>{formatIDR(bouquetPrice - discountValue + shippingCost)}</span>
                   </div>
                 </div>
 
