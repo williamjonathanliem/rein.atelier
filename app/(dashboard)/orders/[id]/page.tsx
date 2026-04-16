@@ -159,7 +159,7 @@ export default function OrderDetailPage() {
                   <Pencil className="h-3.5 w-3.5 text-amber-600" />
                   <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Handwritten Note</p>
                 </div>
-                <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap font-[cursive] text-base">
+                <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap">
                   {order.handwritten_note}
                 </p>
               </div>
