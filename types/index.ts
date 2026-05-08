@@ -39,6 +39,7 @@ export interface Order {
   notes?: string
   product_type?: string
   reference_image_url?: string
+  reference_image_urls?: string[]
   handwritten_note?: string
   delivery_time?: string
   delivery_type: 'pickup' | 'delivery'

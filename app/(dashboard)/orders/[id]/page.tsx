@@ -32,7 +32,7 @@ export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const { orders, loading } = useOrdersContext()
-  const [showRefImage, setShowRefImage] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [editOpen, setEditOpen] = useState(false)
 
   const order = orders.find(o => o.id === id)
@@ -131,26 +131,35 @@ export default function OrderDetailPage() {
               </div>
             )}
 
-            {/* Reference picture */}
-            {order.reference_image_url && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Reference Picture</p>
-                <div
-                  className="relative group cursor-pointer rounded-xl overflow-hidden border border-gray-100 bg-gray-50"
-                  onClick={() => setShowRefImage(true)}
-                >
-                  <img
-                    src={order.reference_image_url}
-                    alt="Reference"
-                    className="w-full object-cover max-h-72"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <ZoomIn className="h-5 w-5 text-white" />
-                    <span className="text-white text-sm font-medium">View full size</span>
+            {/* Reference pictures */}
+            {(() => {
+              const imgs = order.reference_image_urls?.length
+                ? order.reference_image_urls
+                : order.reference_image_url
+                  ? [order.reference_image_url]
+                  : []
+              return imgs.length > 0 ? (
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                    Reference Pictures <span className="text-gray-300 font-normal normal-case">({imgs.length})</span>
+                  </p>
+                  <div className={`grid gap-2 ${imgs.length === 1 ? 'grid-cols-1' : imgs.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                    {imgs.map((url, i) => (
+                      <div
+                        key={i}
+                        className="relative group cursor-pointer rounded-xl overflow-hidden border border-gray-100 bg-gray-50 aspect-square"
+                        onClick={() => setLightboxIndex(i)}
+                      >
+                        <img src={url} alt={`Reference ${i + 1}`} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                          <ZoomIn className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
-            )}
+              ) : null
+            })()}
 
             {/* Handwritten note */}
             {order.handwritten_note && (
@@ -301,15 +310,18 @@ export default function OrderDetailPage() {
         </div>
       </div>
 
-      {/* Reference image lightbox */}
-      {order.reference_image_url && (
-        <Dialog open={showRefImage} onOpenChange={setShowRefImage}>
+      {/* Lightbox */}
+      {lightboxIndex !== null && (
+        <Dialog open={lightboxIndex !== null} onOpenChange={open => { if (!open) setLightboxIndex(null) }}>
           <DialogContent className="max-w-4xl p-2 bg-black/95 border-0">
-            <img
-              src={order.reference_image_url}
-              alt="Reference"
-              className="w-full h-auto max-h-[85vh] object-contain rounded"
-            />
+            {(() => {
+              const imgs = order.reference_image_urls?.length
+                ? order.reference_image_urls
+                : order.reference_image_url ? [order.reference_image_url] : []
+              return imgs[lightboxIndex]
+                ? <img src={imgs[lightboxIndex]} alt="Reference" className="w-full h-auto max-h-[85vh] object-contain rounded" />
+                : null
+            })()}
           </DialogContent>
         </Dialog>
       )}

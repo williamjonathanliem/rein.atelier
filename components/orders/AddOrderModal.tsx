@@ -76,10 +76,10 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
   const [saving, setSaving] = useState(false)
   const [clientSearchOpen, setClientSearchOpen] = useState(false)
 
-  // Reference image
-  const [refImageFile, setRefImageFile] = useState<File | null>(null)
-  const [refImagePreview, setRefImagePreview] = useState<string | null>(null)
-  const [showLightbox, setShowLightbox] = useState(false)
+  // Reference images (up to 5)
+  type ImageSlot = { url: string; file?: File }
+  const [images, setImages] = useState<ImageSlot[]>([])
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Derived shipping cost
@@ -137,19 +137,24 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
           return raw ? String(raw) : ''
         })(),
       })
-      setRefImagePreview(editOrder.reference_image_url ?? null)
+      const urls = editOrder.reference_image_urls?.length
+        ? editOrder.reference_image_urls
+        : editOrder.reference_image_url
+          ? [editOrder.reference_image_url]
+          : []
+      setImages(urls.map(url => ({ url })))
     } else {
       setForm({ ...defaultForm, order_date: todayString() })
-      setRefImagePreview(null)
+      setImages([])
     }
-    setRefImageFile(null)
   }, [editOrder, open])
 
   useEffect(() => {
     return () => {
-      if (refImagePreview?.startsWith('blob:')) URL.revokeObjectURL(refImagePreview)
+      images.forEach(slot => { if (slot.file) URL.revokeObjectURL(slot.url) })
     }
-  }, [refImagePreview])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const set = <K extends keyof typeof defaultForm>(k: K, v: (typeof defaultForm)[K]) =>
     setForm(prev => ({ ...prev, [k]: v }))
@@ -169,20 +174,21 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
     setClientSearchOpen(false)
   }
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (refImagePreview?.startsWith('blob:')) URL.revokeObjectURL(refImagePreview)
-    setRefImageFile(file)
-    setRefImagePreview(URL.createObjectURL(file))
+  const handleImagesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    const available = 5 - images.length
+    files.slice(0, available).forEach(file => {
+      setImages(prev => [...prev, { url: URL.createObjectURL(file), file }])
+    })
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  const clearImage = () => {
-    if (refImagePreview?.startsWith('blob:')) URL.revokeObjectURL(refImagePreview)
-    setRefImageFile(null)
-    setRefImagePreview(null)
-    setForm(prev => ({ ...prev, reference_image_url: '' }))
-    if (fileInputRef.current) fileInputRef.current.value = ''
+  const removeImage = (index: number) => {
+    setImages(prev => {
+      const slot = prev[index]
+      if (slot.file) URL.revokeObjectURL(slot.url)
+      return prev.filter((_, i) => i !== index)
+    })
   }
 
   const compressImage = (file: File, maxWidth = 1400, quality = 0.82): Promise<Blob> =>
@@ -217,11 +223,10 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
     if (!form.client_name.trim() || !form.deadline) return
     setSaving(true)
 
-    let imageUrl = form.reference_image_url
-    if (refImageFile) {
-      const uploaded = await uploadImage(refImageFile)
-      if (uploaded) imageUrl = uploaded
-    }
+    const uploadedUrls = await Promise.all(
+      images.map(slot => slot.file ? uploadImage(slot.file) : Promise.resolve(slot.url))
+    )
+    const finalUrls = uploadedUrls.filter((u): u is string => !!u)
 
     const isDelivery = form.delivery_type === 'delivery'
     const payload = {
@@ -248,7 +253,8 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
       invoice_font: form.invoice_font,
       invoice_date_format: form.invoice_date_format,
       whatsapp_sent: form.whatsapp_sent,
-      reference_image_url: imageUrl || undefined,
+      reference_image_url: finalUrls[0] || undefined,
+      reference_image_urls: finalUrls,
       handwritten_note: form.handwritten_note || undefined,
       delivery_type: form.delivery_type,
       shipping_origin: isDelivery ? (form.shipping_origin || undefined) : undefined,
@@ -266,8 +272,6 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
     setSaving(false)
     onOpenChange(false)
   }
-
-  const lightboxSrc = refImagePreview ?? form.reference_image_url
 
   return (
     <>
@@ -354,33 +358,36 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
                   />
                 </div>
 
-                {/* Reference Picture */}
+                {/* Reference Pictures */}
                 <div>
-                  <Label className="mb-1.5 block">Reference Picture</Label>
-                  {refImagePreview || form.reference_image_url ? (
-                    <div className="relative">
-                      <div
-                        className="relative group cursor-pointer rounded-lg overflow-hidden border border-gray-200 bg-gray-50"
-                        style={{ aspectRatio: '4/3' }}
-                        onClick={() => setShowLightbox(true)}
-                      >
-                        <img src={refImagePreview ?? form.reference_image_url} alt="Reference" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
-                          <ZoomIn className="h-5 w-5 text-white" />
-                          <span className="text-white text-xs font-medium">View full size</span>
+                  <Label className="mb-1.5 block">Reference Pictures <span className="text-gray-400 font-normal">(up to 5)</span></Label>
+                  {images.length > 0 && (
+                    <div className="grid grid-cols-5 gap-1.5 mb-2">
+                      {images.map((slot, i) => (
+                        <div key={i} className="relative group">
+                          <div
+                            className="relative cursor-pointer rounded-lg overflow-hidden border border-gray-200 bg-gray-50 aspect-square"
+                            onClick={() => setLightboxIndex(i)}
+                          >
+                            <img src={slot.url} alt={`Ref ${i + 1}`} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <ZoomIn className="h-3.5 w-3.5 text-white" />
+                            </div>
+                          </div>
+                          <button type="button" onClick={() => removeImage(i)} className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-white border border-gray-200 shadow-sm hover:bg-red-50 flex items-center justify-center transition-colors">
+                            <X className="h-2.5 w-2.5 text-gray-500" />
+                          </button>
                         </div>
-                      </div>
-                      <button type="button" onClick={clearImage} className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-white border border-gray-200 shadow-sm hover:bg-red-50 flex items-center justify-center transition-colors">
-                        <X className="h-3 w-3 text-gray-500" />
-                      </button>
+                      ))}
                     </div>
-                  ) : (
-                    <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full border-2 border-dashed border-gray-200 rounded-lg p-5 flex flex-col items-center gap-1.5 text-gray-400 hover:border-violet-300 hover:text-violet-500 transition-colors">
-                      <Upload className="h-5 w-5" />
-                      <span className="text-xs">Click to upload reference image</span>
+                  )}
+                  {images.length < 5 && (
+                    <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center gap-1.5 text-gray-400 hover:border-violet-300 hover:text-violet-500 transition-colors">
+                      <Upload className="h-4 w-4" />
+                      <span className="text-xs">{images.length === 0 ? 'Click to upload reference images' : `Add more (${5 - images.length} left)`}</span>
                     </button>
                   )}
-                  <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+                  <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImagesSelect} />
                 </div>
 
                 <div>
@@ -611,10 +618,10 @@ export function AddOrderModal({ open, onOpenChange, editOrder }: AddOrderModalPr
       </Dialog>
 
       {/* Lightbox */}
-      {showLightbox && lightboxSrc && (
-        <Dialog open={showLightbox} onOpenChange={setShowLightbox}>
+      {lightboxIndex !== null && images[lightboxIndex] && (
+        <Dialog open={lightboxIndex !== null} onOpenChange={open => { if (!open) setLightboxIndex(null) }}>
           <DialogContent className="max-w-4xl p-2 bg-black/95 border-0">
-            <img src={lightboxSrc} alt="Reference" className="w-full h-auto max-h-[85vh] object-contain rounded" />
+            <img src={images[lightboxIndex].url} alt="Reference" className="w-full h-auto max-h-[85vh] object-contain rounded" />
           </DialogContent>
         </Dialog>
       )}
